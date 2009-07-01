@@ -1,0 +1,22 @@
+#!/bin/sh
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+case $(dirname $0) in
+        /*) FULLPATH=$(dirname $0);;
+        *)  FULLPATH=$(pwd)/$(dirname $0);;
+esac
+
+BASEDIR=$(echo $FULLPATH | sed -e 's,/sbin,,')
+DAEMON=$BASEDIR/sbin/cdr-exporter.pl
+DEFAULTS=$BASEDIR/etc/cdr-exporter.default
+
+test -f $DAEMON || exit 0
+
+# Load startup options if available
+if [ -f $DEFAULTS ]; then
+   . $DEFAULTS || true
+   fi
+
+
+$DAEMON -h $DBHOST -P $DBPORT -u $DBUSER -p $DBPASS -d $DBDB \
+	-t $CDRDIR -f $PREFIX -v $VERSION
