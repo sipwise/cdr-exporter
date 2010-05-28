@@ -1,0 +1,15 @@
+Source: sipwise-cdr-exporter
+Section: utils
+Priority: extra
+Maintainer: Jon Bonilla <jbonilla@sipwise.com>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.8.4
+Homepage: http://sipwise.com/
+Vcs-svn: https://dev.sipwise.com/svn/voip-tools/cdr-exporter
+Vcs-Browser: https://dev.sipwise.com/svn/voip-tools/cdr-exporter
+
+Package: sipwise-cdr-exporter
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, perl-modules, libclass-dbi-mysql-perl
+Description: cdr export tool
+ Exports cdrs to csv files that can be fetched by 3rd party tools.

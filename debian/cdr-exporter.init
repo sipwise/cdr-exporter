@@ -6,9 +6,8 @@ case $(dirname $0) in
         *)  FULLPATH=$(pwd)/$(dirname $0);;
 esac
 
-BASEDIR=$(echo $FULLPATH | sed -e 's,/sbin,,')
-DAEMON=$BASEDIR/sbin/cdr-exporter.pl
-DEFAULTS=$BASEDIR/etc/cdr-exporter.default
+DAEMON=/sbin/cdr-exporter
+DEFAULTS=/etc/default/cdr-exporter
 
 test -f $DAEMON || exit 0
 

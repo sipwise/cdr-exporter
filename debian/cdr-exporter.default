@@ -1,4 +1,4 @@
-DBHOST="192.168.102.4"
+DBHOST="127.0.0.1"
 DBPORT="3306"
 DBUSER="exporter"
 DBPASS="1exportTheCDRs!"

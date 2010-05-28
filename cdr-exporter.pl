@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id$
+# $Id: cdr-exporter.pl 943 2008-10-10 10:52:59Z agranig $
 
 use strict;
 use warnings;
