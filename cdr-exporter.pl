@@ -7,43 +7,37 @@ use DBI;
 use Getopt::Long;
 use Digest::MD5;
 
-my %CONF;
+our $DBHOST;
+our $DBUSER;
+our $DBPASS;
+our $DBDB;
+our $CDRDIR;
+our $PREFIX;
+our $VERSION;
 
-{
-	my $res = GetOptions(
-				"help"		=> \$CONF{help},
-				"h=s"		=> \$CONF{host},
-				"P=i"		=> \$CONF{port},
-				"u=s"		=> \$CONF{user},
-				"p=s"		=> \$CONF{pass},
-				"d=s"		=> \$CONF{db},
-				"t=s"		=> \$CONF{target},
-				"f=s"		=> \$CONF{prefix},
-				"v=s"		=> \$CONF{version},
-	);
 
-	if (!$res || $CONF{help}) {
-		print("Usage:   $0 { --help | [-h HOSTNAME] [-P PORT] [-u USERNAME] [-p PASSWORD]\n");
-		print("             -d DATABASE -t TARGETPATH -f PREFIX -v VERSION }\n");
-		print("Example: $0 -d accounting -t /tmp/acc.$$ -f sipwise -v 001\n");
-		exit($res ? 0 : 1);
-	}
+my $config_file = "/etc/cdr-exporter.conf";
+open CONFIG, "$config_file" or die "Program stopping, couldn't open the configuration file '$config_file'.\n";
 
-	for my $k (qw(db target prefix version)) {
-		if (!defined($CONF{$k})) {
-			print("Missing argument \"$k\", see $0 --help\n");
-			exit(1);
-		}
-	}
+while (<CONFIG>) {
+    chomp;                  # no newline
+    s/#.*//;                # no comments
+    s/^\s+//;               # no leading white
+    s/\s+$//;               # no trailing white
+    next unless length;     # anything left?
+    my ($var, $value) = split(/\s*=\s*/, $_, 2);
+        no strict 'refs';
+        $$var = $value;
 }
+close CONFIG;
 
--d $CONF{target} or die("Target directory $CONF{target} doesn't exist, stop");
 
-$0 = "$0";	# hide command line with password
 
-my $DBH = DBI->connect("dbi:mysql:$CONF{db}" . ($CONF{host} ? ";host=$CONF{host}" : ""), $CONF{user} || $ENV{USER} || undef, $CONF{pass}) or die("DB connect failed, stop");
 
-print("+++ Start run with DB " . ($CONF{user} || "(undef)") . "\@$CONF{db} to $CONF{prefix}\n");
+my $DBH = DBI->connect("dbi:mysql:$DBDB;host=$DBHOST", $DBUSER, $DBPASS);
+
+$DBH or return 0;
+print("+++ Start run with DB " . ($DBUSER || "(undef)") . "\@$DBDB to $PREFIX\n");
 
 my $COLLID = "exporter";
 my %MARKS;	# last id etc
@@ -111,8 +105,8 @@ my @NOW = localtime($NOW);
 		unshift(@F, sprintf('%04i', $num));
 
 		$MARKS{lastseq}++;
-		my $fn = sprintf('%s/%s_%s_%s_%010i.cdr', $CONF{target}, $CONF{prefix}, $CONF{version}, $ts, $MARKS{lastseq});
-		my $tfn = sprintf('%s/%s_%s_%s_%010i.cdr.'.$$, $CONF{target}, $CONF{prefix}, $CONF{version}, $ts, $MARKS{lastseq});
+		my $fn = sprintf('%s/%s_%s_%s_%010i.cdr', $CDRDIR, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
+		my $tfn = sprintf('%s/%s_%s_%s_%010i.cdr.'.$$, $CDRDIR, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
 		my $fd;
 		open($fd, ">", $tfn) or die("failed to open tmp-file $tfn ($!), stop");
 		my $ctx = Digest::MD5->new;

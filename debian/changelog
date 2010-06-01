@@ -1,3 +1,10 @@
+sipwise-cdr-exporter (0.2.0) unstable; urgency=low
+
+  * Read the configuration from the script itself
+  * Remove init script and etc/default file
+
+ -- Jon Bonilla <jbonilla@sipwise.com>  Fri, 16 Apr 2010 12:03:01 +0200
+
 sipwise-cdr-exporter (0.1.0) unstable; urgency=low
 
   * Initial release.

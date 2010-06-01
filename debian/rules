@@ -27,11 +27,12 @@ install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-	dh_installdirs usr/sbin etc/cron.d
+	dh_installdirs usr/sbin etc/cron.d etc
 
 	install -m 755 cdr-exporter.pl   debian/sipwise-cdr-exporter/usr/sbin/cdr-exporter
 	install -m 755 cdr-md5.sh        debian/sipwise-cdr-exporter/usr/sbin/cdr-md5
 	install -m 644 cdr-exporter.cron debian/sipwise-cdr-exporter/etc/cron.d/cdr-exporter
+	install -m 644 cdr-exporter.conf debian/sipwise-cdr-exporter/etc/cdr-exporter.conf
 
 # Build architecture-dependent files here.
 binary-arch: build install
@@ -45,7 +46,7 @@ binary-indep: build install
 	dh_installdocs
 	dh_installexamples
 	#dh_installman docs/rate-o-mat.8
-	dh_installinit --name=cdr-exporter
+#	dh_installinit --name=cdr-exporter
 	dh_link
 	dh_strip
 	dh_compress
