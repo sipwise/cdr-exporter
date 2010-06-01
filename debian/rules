@@ -27,13 +27,11 @@ install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-	dh_installdirs sbin
+	dh_installdirs usr/sbin
 
-	install -m 755 cdr-exporter   debian/sipwise-cdr-exporter/sbin/cdr-exporter
-	install -m 755 cdr-md5.sh debian/sipwise-cdr-exporter/sbin/cdr-md5
+	install -m 755 cdr-exporter   debian/sipwise-cdr-exporter/usr/sbin/cdr-exporter
+	install -m 755 cdr-md5.sh debian/sipwise-cdr-exporter/usr/sbin/cdr-md5
 	install -m 644 cdr-exporter.cron debian/etc/cron.d/cdr-exporter
-	# drop svn files:
-#	find debian/sipwise-cdr-exporter -type d -name \.svn -print0 | xargs -0 rm -rf
 
 # Build architecture-dependent files here.
 binary-arch: build install

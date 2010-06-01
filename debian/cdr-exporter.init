@@ -6,7 +6,7 @@ case $(dirname $0) in
         *)  FULLPATH=$(pwd)/$(dirname $0);;
 esac
 
-DAEMON=/sbin/cdr-exporter
+DAEMON=/usr/sbin/cdr-exporter
 DEFAULTS=/etc/default/cdr-exporter
 
 test -f $DAEMON || exit 0

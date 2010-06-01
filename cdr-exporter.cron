@@ -1,2 +1,2 @@
-25 * * * *   root    /sbin/cdr-exporter >/dev/null
-55 * * * *   root    /sbin/cdr-exporter >/dev/null
+25 * * * *   root    /usr/sbin/cdr-exporter >/dev/null
+55 * * * *   root    /usr/sbin/cdr-exporter >/dev/null
