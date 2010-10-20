@@ -16,7 +16,7 @@ our $PREFIX;
 our $VERSION;
 
 
-my $config_file = "/etc/sipwise-cdr-exporter/cdr-exporter.conf";
+my $config_file = "/etc/ngcp-cdr-exporter/cdr-exporter.conf";
 open CONFIG, "$config_file" or die "Program stopping, couldn't open the configuration file '$config_file'.\n";
 
 while (<CONFIG>) {

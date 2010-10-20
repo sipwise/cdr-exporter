@@ -27,12 +27,12 @@ install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-	dh_installdirs usr/sbin etc/cron.d etc/sipwise-cdr-exporter
+	dh_installdirs usr/sbin etc/cron.d etc/ngcp-cdr-exporter
 
-	install -m 755 cdr-exporter.pl   debian/sipwise-cdr-exporter/usr/sbin/cdr-exporter
-	install -m 755 cdr-md5.sh        debian/sipwise-cdr-exporter/usr/sbin/cdr-md5
-	install -m 644 cdr-exporter.cron debian/sipwise-cdr-exporter/etc/cron.d/sipwise-cdr-exporter
-	install -m 644 cdr-exporter.conf debian/sipwise-cdr-exporter/etc/sipwise-cdr-exporter/cdr-exporter.conf
+	install -m 755 cdr-exporter.pl   debian/ngcp-cdr-exporter/usr/sbin/cdr-exporter
+	install -m 755 cdr-md5.sh        debian/ngcp-cdr-exporter/usr/sbin/cdr-md5
+	install -m 644 cdr-exporter.cron debian/ngcp-cdr-exporter/etc/cron.d/ngcp-cdr-exporter
+	install -m 644 cdr-exporter.conf debian/ngcp-cdr-exporter/etc/ngcp-cdr-exporter/cdr-exporter.conf
 
 # Build architecture-dependent files here.
 binary-arch: build install

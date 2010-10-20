@@ -1,4 +1,4 @@
-Source: sipwise-cdr-exporter
+Source: ngcp-cdr-exporter
 Section: utils
 Priority: extra
 Maintainer: Jon Bonilla <jbonilla@sipwise.com>
@@ -8,7 +8,7 @@ Homepage: http://sipwise.com/
 Vcs-svn: https://dev.sipwise.com/svn/voip-tools/cdr-exporter
 Vcs-Browser: https://dev.sipwise.com/svn/voip-tools/cdr-exporter
 
-Package: sipwise-cdr-exporter
+Package: ngcp-cdr-exporter
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, perl-modules, libclass-dbi-mysql-perl
 Description: cdr export tool
