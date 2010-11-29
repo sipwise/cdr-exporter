@@ -4,7 +4,6 @@
 use strict;
 use warnings;
 use DBI;
-use Getopt::Long;
 use Digest::MD5;
 
 our $DBHOST;
@@ -53,6 +52,12 @@ my %MARKS;	# last id etc
 my $NOW = time();
 my @NOW = localtime($NOW);
 
+my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source_user source_domain source_cli
+                         source_clir destination_user_id destination_provider_id destination_user destination_domain
+                         destination_user_in destination_domain_in call_type call_status call_code start_time duration
+                         call_id rating_status rated_at carrier_cost customer_cost carrier_zone customer_zone
+                         carrier_destination customer_destination destination_user_dialed);
+
 {
 	my $ts = sprintf('%04i%02i%02i%02i%02i%02i', $NOW[5] + 1900, $NOW[4] + 1, @NOW[3,2,1,0]);
 	my $limit = 5000;
@@ -61,8 +66,7 @@ my @NOW = localtime($NOW);
 	for (;;) {
 		print("--- Starting CDR export with id > $MARKS{lastid}\n");
 		my $s = $DBH->prepare(<<"!");
-			select
-				id,			update_time,
+			select	cdr.id,			update_time,
 				source_user_id,		source_provider_id,
 				source_user,		source_domain,
 				source_cli,		source_clir,
@@ -74,26 +78,38 @@ my @NOW = localtime($NOW);
 				duration,		call_id,
 				rating_status,		rated_at,
 				carrier_cost,		reseller_cost,
-				customer_cost,		carrier_billing_zone_id,
-				reseller_billing_zone_id, customer_billing_zone_id,
-				carrier_billing_fee_id,	reseller_billing_fee_id,
-				customer_billing_fee_id,
+				customer_cost,		frag_carrier_onpeak,
+				frag_reseller_onpeak,   frag_customer_onpeak,
+				carrier_bbz.zone AS carrier_zone, reseller_bbz.zone AS reseller_zone,
+				customer_bbz.zone AS customer_zone, carrier_bbz.detail AS carrier_destination,
+				reseller_bbz.detail AS reseller_destination, customer_bbz.detail AS customer_destination,
 				destination_user_dialed
-			from
-				cdr
-			where
-				id > ?
+			from	accounting.cdr
+				LEFT JOIN billing.billing_zones_history carrier_bbz ON cdr.carrier_billing_zone_id = carrier_bbz.id
+				LEFT JOIN billing.billing_zones_history reseller_bbz ON cdr.reseller_billing_zone_id = reseller_bbz.id
+				LEFT JOIN billing.billing_zones_history customer_bbz ON cdr.customer_billing_zone_id = customer_bbz.id
+			where	cdr.id > ?
+			  and	source_provider_id = 1
+			  and	call_status = 'ok'
 			order by
-				id
-			limit
-				$limit
+				cdr.id
+			limit	$limit
 !
 		$s->execute($MARKS{lastid}) or die($DBH->errstr);
 
 		my @F;
-		while (my $r = $s->fetch) {
-			$MARKS{lastid} = $r->[0];
-			my $l = join(",", map {(!defined($_) || $_ eq "") ? "" : "'$_'"} @$r);
+		while (my $r = $s->fetchrow_hashref()) {
+			# finish export to give rate-o-mat time to catch up
+			last if $r->{rating_status} eq 'unrated';
+
+			unless(defined $r->{carrier_zone}) { # platform internal, no peering cost calculated
+				$r->{carrier_cost} = '0.00';
+				$r->{carrier_zone} = 'onnet';
+				$r->{carrier_destination} = 'platform internal';
+			}
+
+			$MARKS{lastid} = $r->{id};
+			my $l = join(",", map {(!defined($_) || $_ eq "") ? "''" : "'$_'"} @$r{@CDR_BODY_FIELDS});
 			push(@F, $l);
 		}
 
