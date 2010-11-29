@@ -1,3 +1,10 @@
+ngcp-cdr-exporter (1.0.0) unstable; urgency=low
+
+  * merged output with latest feature set and documentation
+  * only exporting outgoing, successful, rated CDRs
+
+ -- Daniel Tiefnig <dtiefnig@sipwise.com>  Tue, 30 Nov 2010 00:17:10 +0100
+
 ngcp-cdr-exporter (0.2.0) unstable; urgency=low
 
   * Read the configuration from the script itself
