@@ -13,6 +13,8 @@ our $DBDB;
 our $CDRDIR;
 our $PREFIX;
 our $VERSION;
+our $DAILY_DIR;
+our $MONTHLY_DIR;
 
 
 my $config_file = "/etc/ngcp-cdr-exporter/cdr-exporter.conf";
@@ -59,7 +61,28 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
                          carrier_destination customer_destination destination_user_dialed);
 
 {
-	my $ts = sprintf('%04i%02i%02i%02i%02i%02i', $NOW[5] + 1900, $NOW[4] + 1, @NOW[3,2,1,0]);
+	my ($dir1, $dir2, $ts);
+	if ($MONTHLY_DIR && $MONTHLY_DIR =~ /1|y/i) {
+		$dir1 = sprintf('%04i%02i', $NOW[5] + 1900, $NOW[4] + 1);
+		if ($DAILY_DIR && $DAILY_DIR =~ /1|y/i) {
+			$dir2 = sprintf('%02i', $NOW[3]);
+			$ts = sprintf('%02i%02i%02i', @NOW[2,1,0]);
+		}
+		else {
+			$dir2 = '.';
+			$ts = sprintf('%02i%02i%02i%02i', @NOW[3,2,1,0]);
+		}
+	}
+	elsif ($DAILY_DIR && $DAILY_DIR =~ /1|y/i) {
+		$dir1 = sprintf('%04i%02i%02i', $NOW[5] + 1900, $NOW[4] + 1, $NOW[3]);
+		$dir2 = '.';
+		$ts = sprintf('%02i%02i%02i', @NOW[2,1,0]);
+	}
+	else {
+		$dir1 = $dir2 = '.';
+		$ts = sprintf('%04i%02i%02i%02i%02i%02i', $NOW[5] + 1900, $NOW[4] + 1, @NOW[3,2,1,0]);
+	}
+
 	my $limit = 5000;
 	my $firstseq = $MARKS{lastseq};
 
@@ -121,8 +144,11 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 		unshift(@F, sprintf('%04i', $num));
 
 		$MARKS{lastseq}++;
-		my $fn = sprintf('%s/%s_%s_%s_%010i.cdr', $CDRDIR, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
-		my $tfn = sprintf('%s/%s_%s_%s_%010i.cdr.'.$$, $CDRDIR, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
+		for my $dd ("$CDRDIR/$dir1", "$CDRDIR/$dir1/$dir2") {
+			-d $dd or (mkdir($dd) or die("failed to create target directory $dd ($!), stop"));
+		}
+		my $fn = sprintf('%s/%s/%s/%s_%s_%s_%010i.cdr', $CDRDIR, $dir1, $dir2, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
+		my $tfn = sprintf('%s/%s/%s/%s_%s_%s_%010i.cdr.'.$$, $CDRDIR, $dir1, $dir2, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
 		my $fd;
 		open($fd, ">", $tfn) or die("failed to open tmp-file $tfn ($!), stop");
 		my $ctx = Digest::MD5->new;
