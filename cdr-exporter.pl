@@ -64,6 +64,7 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 {
 	my ($dir1, $dir2, $ts);
 	$ts = sprintf('%04i%02i%02i%02i%02i%02i', $NOW[5] + 1900, $NOW[4] + 1, @NOW[3,2,1,0]);
+	$FULL_NAMES = ($FULL_NAMES && $MONTHLY_DIR =~ /1|y/i);
 
 	if ($MONTHLY_DIR && $MONTHLY_DIR =~ /1|y/i) {
 		$dir1 = sprintf('%04i%02i', $NOW[5] + 1900, $NOW[4] + 1);
