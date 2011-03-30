@@ -15,6 +15,7 @@ our $PREFIX;
 our $VERSION;
 our $DAILY_DIR;
 our $MONTHLY_DIR;
+our $FULL_NAMES;
 
 
 my $config_file = "/etc/ngcp-cdr-exporter/cdr-exporter.conf";
@@ -62,25 +63,26 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 
 {
 	my ($dir1, $dir2, $ts);
+	$ts = sprintf('%04i%02i%02i%02i%02i%02i', $NOW[5] + 1900, $NOW[4] + 1, @NOW[3,2,1,0]);
+
 	if ($MONTHLY_DIR && $MONTHLY_DIR =~ /1|y/i) {
 		$dir1 = sprintf('%04i%02i', $NOW[5] + 1900, $NOW[4] + 1);
 		if ($DAILY_DIR && $DAILY_DIR =~ /1|y/i) {
 			$dir2 = sprintf('%02i', $NOW[3]);
-			$ts = sprintf('%02i%02i%02i', @NOW[2,1,0]);
+			$FULL_NAMES or $ts = sprintf('%02i%02i%02i', @NOW[2,1,0]);
 		}
 		else {
 			$dir2 = '.';
-			$ts = sprintf('%02i%02i%02i%02i', @NOW[3,2,1,0]);
+			$FULL_NAMES or $ts = sprintf('%02i%02i%02i%02i', @NOW[3,2,1,0]);
 		}
 	}
 	elsif ($DAILY_DIR && $DAILY_DIR =~ /1|y/i) {
 		$dir1 = sprintf('%04i%02i%02i', $NOW[5] + 1900, $NOW[4] + 1, $NOW[3]);
 		$dir2 = '.';
-		$ts = sprintf('%02i%02i%02i', @NOW[2,1,0]);
+		$FULL_NAMES or $ts = sprintf('%02i%02i%02i', @NOW[2,1,0]);
 	}
 	else {
 		$dir1 = $dir2 = '.';
-		$ts = sprintf('%04i%02i%02i%02i%02i%02i', $NOW[5] + 1900, $NOW[4] + 1, @NOW[3,2,1,0]);
 	}
 
 	my $limit = 5000;
