@@ -16,6 +16,7 @@ our $VERSION;
 our $DAILY_DIR;
 our $MONTHLY_DIR;
 our $FULL_NAMES;
+our $EXPORT_UNRATED;
 
 
 my $config_file = "/etc/ngcp-cdr-exporter/cdr-exporter.conf";
