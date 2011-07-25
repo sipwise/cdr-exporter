@@ -56,9 +56,9 @@ my %MARKS;	# last id etc
 my $NOW = time();
 my @NOW = localtime($NOW);
 
-my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source_user source_domain source_cli
-                         source_clir destination_user_id destination_provider_id destination_user destination_domain
-                         destination_user_in destination_domain_in call_type call_status call_code start_time duration
+my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source_external_subscriber_id source_external_contract_id source_account_id source_user source_domain source_cli
+                         source_clir destination_user_id destination_provider_id destination_external_subscriber_id destination_external_contract_id destination_account_id destination_user destination_domain
+                         destination_user_in destination_domain_in peer_auth_user peer_auth_realm call_type call_status call_code start_time duration
                          call_id rating_status rated_at carrier_cost customer_cost carrier_zone customer_zone
                          carrier_destination customer_destination destination_user_dialed);
 
@@ -95,11 +95,16 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 		my $s = $DBH->prepare(<<"!");
 			select	cdr.id,			update_time,
 				source_user_id,		source_provider_id,
+				source_external_subscriber_id, source_external_contract_id,
+				source_account_id,
 				source_user,		source_domain,
 				source_cli,		source_clir,
 				destination_user_id,	destination_provider_id,
+				destination_external_subscriber_id, destination_external_contract_id,
+				destination_account_id
 				destination_user,	destination_domain,
 				destination_user_in,	destination_domain_in,
+				peer_auth_user,		peer_auth_realm,
 				call_type,		call_status,
 				call_code,		start_time,
 				duration,		call_id,
