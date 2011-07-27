@@ -1,3 +1,9 @@
+ngcp-cdr-exporter (1.2.0) unstable; urgency=low
+
+  * Updated to reflect new fields in CDR table.
+
+ -- Andreas Granig <agranig@sipwise.com>  Wed, 27 Jul 2011 16:13:06 +0200
+
 ngcp-cdr-exporter (1.1.0) unstable; urgency=low
 
   [ Richard Fuchs ]
