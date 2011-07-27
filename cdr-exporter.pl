@@ -132,12 +132,15 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 		my @F;
 		while (my $r = $s->fetchrow_hashref()) {
 			# finish export to give rate-o-mat time to catch up
-			last if $r->{rating_status} eq 'unrated' && $EXPORT_UNRATED !~ /y|1|true/i;
-
-			unless(defined $r->{carrier_zone}) { # platform internal, no peering cost calculated
-				$r->{carrier_cost} = '0.00';
-				$r->{carrier_zone} = 'onnet';
-				$r->{carrier_destination} = 'platform internal';
+			if ($r->{rating_status} eq 'unrated') {
+				last if $EXPORT_UNRATED !~ /y|1|true/i;
+			}
+			else {
+				unless(defined $r->{carrier_zone}) { # platform internal, no peering cost calculated
+					$r->{carrier_cost} = '0.00';
+					$r->{carrier_zone} = 'onnet';
+					$r->{carrier_destination} = 'platform internal';
+				}
 			}
 
 			$MARKS{lastid} = $r->{id};
