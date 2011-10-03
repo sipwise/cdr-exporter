@@ -16,6 +16,9 @@ our $VERSION;
 our $DAILY_DIR;
 our $MONTHLY_DIR;
 our $FULL_NAMES;
+our $FILES_OWNER = 'cdrexport';
+our $FILES_GROUP = 'cdrexport';
+our $FILES_MASK = '022';
 
 
 my $config_file = "/etc/ngcp-cdr-exporter/cdr-exporter.conf";
@@ -32,6 +35,22 @@ while (<CONFIG>) {
         $$var = $value;
 }
 close CONFIG;
+
+
+
+
+
+sub chownmod {
+	my ($file, $user, $group, $defmode, $mask) = @_;
+
+	if ($user || $group) {
+		my @arg = (-1, -1, $file);
+		$user and $arg[0] = getpwnam($user) || -1;
+		$group and $arg[1] = getgrnam($group) || -1;
+		chown(@arg);
+	}
+	$mask and chmod($defmode & ~oct($mask), $file);
+}
 
 
 
@@ -148,7 +167,10 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 
 		$MARKS{lastseq}++;
 		for my $dd ("$CDRDIR/$dir1", "$CDRDIR/$dir1/$dir2") {
-			-d $dd or (mkdir($dd) or die("failed to create target directory $dd ($!), stop"));
+			if (! -d $dd) {
+				mkdir($dd) or die("failed to create target directory $dd ($!), stop");
+				chownmod($dd, $FILES_OWNER, $FILES_GROUP, 0777, $FILES_MASK);
+			}
 		}
 		my $fn = sprintf('%s/%s/%s/%s_%s_%s_%010i.cdr', $CDRDIR, $dir1, $dir2, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
 		my $tfn = sprintf('%s/%s/%s/%s_%s_%s_%010i.cdr.'.$$, $CDRDIR, $dir1, $dir2, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
@@ -171,6 +193,7 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 
 		rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop");
 		print("### successfully moved $tfn to $fn\n");
+		chownmod($fn, $FILES_OWNER, $FILES_GROUP, 0666, $FILES_MASK);
 
 		$num < $limit and last;
 	}
