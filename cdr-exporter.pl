@@ -125,7 +125,7 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 				destination_user_in,	destination_domain_in,
 				peer_auth_user,		peer_auth_realm,
 				call_type,		call_status,
-				call_code,		start_time,
+				call_code,		CONCAT(FROM_UNIXTIME(start_time), '.', SUBSTRING_INDEX(start_time, '.', -1)) AS start_time,
 				duration,		call_id,
 				rating_status,		rated_at,
 				carrier_cost,		reseller_cost,
