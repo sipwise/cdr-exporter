@@ -1,3 +1,9 @@
+ngcp-cdr-exporter (1.3.1) unstable; urgency=low
+
+  * Add additional fields to the output (reseller_cost carrier_free_time reseller_free_time customer_free_time reseller_zone reseller_destination)
+
+ -- Richard Fuchs <rfuchs@sipwise.com>  Thu, 17 Nov 2011 17:21:07 -0500
+
 ngcp-cdr-exporter (1.3.0) unstable; urgency=low
 
   * Add capability to chown/chmod created files and directories
