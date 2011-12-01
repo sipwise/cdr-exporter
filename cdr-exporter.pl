@@ -176,7 +176,7 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 			last;
 		}
 		my $num = scalar(@F);
-		unshift(@F, sprintf('%04i', $num));
+		unshift(@F, sprintf('%s,%04i', $VERSION, $num));
 
 		$MARKS{lastseq}++;
 		for my $dd ("$CDRDIR/$dir1", "$CDRDIR/$dir1/$dir2") {
