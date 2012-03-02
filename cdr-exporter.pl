@@ -77,11 +77,10 @@ my @NOW = localtime($NOW);
 
 my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source_external_subscriber_id source_external_contract_id source_account_id source_user source_domain source_cli
                          source_clir destination_user_id destination_provider_id destination_external_subscriber_id destination_external_contract_id destination_account_id destination_user destination_domain
-                         destination_user_in destination_domain_in peer_auth_user peer_auth_realm call_type call_status call_code start_time duration
+                         destination_user_in destination_domain_in peer_auth_user peer_auth_realm call_type call_status call_code init_time start_time duration
                          call_id rating_status rated_at carrier_cost customer_cost carrier_zone customer_zone
                          carrier_destination customer_destination destination_user_dialed
-			 reseller_cost carrier_free_time reseller_free_time customer_free_time reseller_zone
-			 reseller_destination);
+			 carrier_free_time customer_free_time);
 
 {
 	my ($dir1, $dir2, $ts);
@@ -128,6 +127,7 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 				peer_auth_user,		peer_auth_realm,
 				call_type,		call_status,
 				call_code,		CONCAT(FROM_UNIXTIME(start_time), '.', SUBSTRING_INDEX(start_time, '.', -1)) AS start_time,
+				CONCAT(FROM_UNIXTIME(init_time), '.', SUBSTRING_INDEX(init_time, '.', -1)) AS init_time,
 				duration,		call_id,
 				rating_status,		rated_at,
 				carrier_cost,		reseller_cost,
