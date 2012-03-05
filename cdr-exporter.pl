@@ -17,8 +17,6 @@ our $DAILY_DIR;
 our $MONTHLY_DIR;
 our $FULL_NAMES;
 our $EXPORT_UNRATED;
-our $EXPORT_INCOMING;
-our $EXPORT_FAILED;
 our $FILES_OWNER = 'cdrexport';
 our $FILES_GROUP = 'cdrexport';
 our $FILES_MASK = '022';
@@ -79,10 +77,11 @@ my @NOW = localtime($NOW);
 
 my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source_external_subscriber_id source_external_contract_id source_account_id source_user source_domain source_cli
                          source_clir destination_user_id destination_provider_id destination_external_subscriber_id destination_external_contract_id destination_account_id destination_user destination_domain
-                         destination_user_in destination_domain_in peer_auth_user peer_auth_realm call_type call_status call_code init_time start_time duration
+                         destination_user_in destination_domain_in peer_auth_user peer_auth_realm call_type call_status call_code start_time duration
                          call_id rating_status rated_at carrier_cost customer_cost carrier_zone customer_zone
                          carrier_destination customer_destination destination_user_dialed
-			 carrier_free_time customer_free_time);
+			 reseller_cost carrier_free_time reseller_free_time customer_free_time reseller_zone
+			 reseller_destination);
 
 {
 	my ($dir1, $dir2, $ts);
@@ -114,7 +113,7 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 
 	for (;;) {
 		print("--- Starting CDR export with id > $MARKS{lastid}\n");
-		my $s = $DBH->prepare("
+		my $s = $DBH->prepare(<<"!");
 			select	cdr.id,			update_time,
 				source_user_id,		source_provider_id,
 				source_external_subscriber_id, source_external_contract_id,
@@ -129,7 +128,6 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 				peer_auth_user,		peer_auth_realm,
 				call_type,		call_status,
 				call_code,		CONCAT(FROM_UNIXTIME(start_time), '.', SUBSTRING_INDEX(start_time, '.', -1)) AS start_time,
-				CONCAT(FROM_UNIXTIME(init_time), '.', SUBSTRING_INDEX(init_time, '.', -1)) AS init_time,
 				duration,		call_id,
 				rating_status,		rated_at,
 				carrier_cost,		reseller_cost,
@@ -146,13 +144,12 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 				LEFT JOIN billing.billing_zones_history reseller_bbz ON cdr.reseller_billing_zone_id = reseller_bbz.id
 				LEFT JOIN billing.billing_zones_history customer_bbz ON cdr.customer_billing_zone_id = customer_bbz.id
 			where	cdr.id > ?
-		". ($EXPORT_INCOMING eq 'yes' ? '' : "and source_provider_id = 1") ."
-		". ($EXPORT_FAILED eq 'yes' ? '' : "and call_status = 'ok'") ."
+			  and	source_provider_id = 1
+			  and	call_status = 'ok'
 			order by
 				cdr.id
 			limit	$limit
-		");
-
+!
 		$s->execute($MARKS{lastid}) or die($DBH->errstr);
 
 		my @F;
