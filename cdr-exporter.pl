@@ -77,8 +77,8 @@ my %MARKS;	# last id etc
 my $NOW = time();
 my @NOW = localtime($NOW);
 
-my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source_external_subscriber_id source_external_contract_id source_account_id source_user source_domain source_cli
-                         source_clir destination_user_id destination_provider_id destination_external_subscriber_id destination_external_contract_id destination_account_id destination_user destination_domain
+my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source_external_subscriber_id source_subscriber_id source_external_contract_id source_account_id source_user source_domain source_cli
+                         source_clir destination_user_id destination_provider_id destination_external_subscriber_id destination_subscriber_id destination_external_contract_id destination_account_id destination_user destination_domain
                          destination_user_in destination_domain_in peer_auth_user peer_auth_realm call_type call_status call_code init_time start_time duration
                          call_id rating_status rated_at carrier_cost customer_cost carrier_zone customer_zone
                          carrier_destination customer_destination destination_user_dialed
@@ -117,13 +117,13 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 		my $s = $DBH->prepare("
 			select	cdr.id,			update_time,
 				source_user_id,		source_provider_id,
-				source_external_subscriber_id, source_external_contract_id,
-				source_account_id,
+				source_external_subscriber_id,	source_bvs.id AS source_subscriber_id,
+				source_external_contract_id,	source_account_id,
 				source_user,		source_domain,
 				source_cli,		source_clir,
 				destination_user_id,	destination_provider_id,
-				destination_external_subscriber_id, destination_external_contract_id,
-				destination_account_id
+				destination_external_subscriber_id,	destination_bvs.id AS destination_subscriber_id,
+				destination_external_contract_id,	destination_account_id
 				destination_user,	destination_domain,
 				destination_user_in,	destination_domain_in,
 				peer_auth_user,		peer_auth_realm,
@@ -145,6 +145,8 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 				LEFT JOIN billing.billing_zones_history carrier_bbz ON cdr.carrier_billing_zone_id = carrier_bbz.id
 				LEFT JOIN billing.billing_zones_history reseller_bbz ON cdr.reseller_billing_zone_id = reseller_bbz.id
 				LEFT JOIN billing.billing_zones_history customer_bbz ON cdr.customer_billing_zone_id = customer_bbz.id
+				LEFT JOIN billing.voip_subscribers source_bvs ON cdr.source_user_id = source_bvs.uuid
+				LEFT JOIN billing.voip_subscribers destination_bvs ON cdr.destination_user_id = destination_bvs.uuid
 			where	cdr.id > ?
 		". ($EXPORT_INCOMING eq 'yes' ? '' : "and source_provider_id = 1") ."
 		". ($EXPORT_FAILED eq 'yes' ? '' : "and call_status = 'ok'") ."
