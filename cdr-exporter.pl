@@ -64,7 +64,7 @@ $DBH or return 0;
 print("+++ Start run with DB " . ($DBUSER || "(undef)") . "\@$DBDB to $PREFIX\n");
 
 my $COLLID = "exporter";
-my %MARKS;	# last id etc
+my %MARKS;	# last seq etc
 {
 	my $s = $DBH->prepare("select acc_id from mark where collector = ?");
 	for my $mk (qw(lastid lastseq)) {
@@ -77,12 +77,28 @@ my %MARKS;	# last id etc
 my $NOW = time();
 my @NOW = localtime($NOW);
 
-my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source_external_subscriber_id source_subscriber_id source_external_contract_id source_account_id source_user source_domain source_cli
-                         source_clir source_ip destination_user_id destination_provider_id destination_external_subscriber_id destination_subscriber_id destination_external_contract_id destination_account_id destination_user destination_domain
-                         destination_user_in destination_domain_in peer_auth_user peer_auth_realm call_type call_status call_code init_time start_time duration
-                         call_id rating_status rated_at carrier_cost customer_cost carrier_zone customer_zone
-                         carrier_destination customer_destination destination_user_dialed
-			 carrier_free_time customer_free_time);
+my @CDR_BODY_FIELDS = qw(
+	id update_time 
+	source_user_id source_provider_id source_external_subscriber_id 
+	source_subscriber_id source_external_contract_id source_account_id 
+	source_user source_domain source_cli source_clir source_ip 
+	destination_user_id destination_provider_id destination_external_subscriber_id 
+	destination_subscriber_id destination_external_contract_id destination_account_id 
+	destination_user destination_domain
+	destination_user_in destination_domain_in destination_user_dialed
+	peer_auth_user peer_auth_realm 
+	call_type call_status call_code 
+	init_time start_time duration
+	call_id rating_status rated_at 
+	source_carrier_cost source_customer_cost 
+	source_carrier_zone source_customer_zone
+	source_carrier_destination source_customer_destination 
+	source_carrier_free_time source_customer_free_time
+	destination_carrier_cost destination_customer_cost 
+	destination_carrier_zone destination_customer_zone
+	destination_carrier_destination destination_customer_destination 
+	destination_carrier_free_time destination_customer_free_time
+);
 
 {
 	my ($dir1, $dir2, $ts);
@@ -113,7 +129,8 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 	my $firstseq = $MARKS{lastseq};
 
 	for (;;) {
-		print("--- Starting CDR export with id > $MARKS{lastid}\n");
+		print("--- Starting CDR export\n");
+		my @ids = ();
 		my $s = $DBH->prepare("
 			select	cdr.id,			update_time,
 				source_user_id,		source_provider_id,
@@ -125,29 +142,33 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 				destination_external_subscriber_id,	destination_bvs.id AS destination_subscriber_id,
 				destination_external_contract_id,	destination_account_id
 				destination_user,	destination_domain,
-				destination_user_in,	destination_domain_in,
+				destination_user_in,	destination_domain_in, destination_user_dialed,
 				peer_auth_user,		peer_auth_realm,
 				call_type,		call_status,
 				call_code,		CONCAT(FROM_UNIXTIME(start_time), '.', SUBSTRING_INDEX(start_time, '.', -1)) AS start_time,
 				CONCAT(FROM_UNIXTIME(init_time), '.', SUBSTRING_INDEX(init_time, '.', -1)) AS init_time,
 				duration,		call_id,
 				rating_status,		rated_at,
-				carrier_cost,		reseller_cost,
-				customer_cost,		frag_carrier_onpeak,
-				frag_reseller_onpeak,   frag_customer_onpeak,
-				carrier_free_time,	reseller_free_time,
-				customer_free_time,
-				carrier_bbz.zone AS carrier_zone, reseller_bbz.zone AS reseller_zone,
-				customer_bbz.zone AS customer_zone, carrier_bbz.detail AS carrier_destination,
-				reseller_bbz.detail AS reseller_destination, customer_bbz.detail AS customer_destination,
-				destination_user_dialed
+				source_carrier_cost,	source_reseller_cost, source_customer_cost,		
+				source_carrier_free_time,	source_reseller_free_time,  source_customer_free_time,
+				source_carrier_bbz.zone AS source_carrier_zone, source_reseller_bbz.zone AS source_reseller_zone,
+				source_customer_bbz.zone AS source_customer_zone, source_carrier_bbz.detail AS source_carrier_destination,
+				source_reseller_bbz.detail AS source_reseller_destination, source_customer_bbz.detail AS source_customer_destination,
+				destination_carrier_cost,	destination_reseller_cost, destination_customer_cost,		
+				destination_carrier_free_time,	destination_reseller_free_time,  destination_customer_free_time,
+				destination_carrier_bbz.zone AS destination_carrier_zone, destination_reseller_bbz.zone AS destination_reseller_zone,
+				destination_customer_bbz.zone AS destination_customer_zone, destination_carrier_bbz.detail AS destination_carrier_destination,
+				destination_reseller_bbz.detail AS destination_reseller_destination, destination_customer_bbz.detail AS destination_customer_destination,
 			from	accounting.cdr
-				LEFT JOIN billing.billing_zones_history carrier_bbz ON cdr.carrier_billing_zone_id = carrier_bbz.id
-				LEFT JOIN billing.billing_zones_history reseller_bbz ON cdr.reseller_billing_zone_id = reseller_bbz.id
-				LEFT JOIN billing.billing_zones_history customer_bbz ON cdr.customer_billing_zone_id = customer_bbz.id
+				LEFT JOIN billing.billing_zones_history source_carrier_bbz ON cdr.source_carrier_billing_zone_id = source_carrier_bbz.id
+				LEFT JOIN billing.billing_zones_history source_reseller_bbz ON cdr.source_reseller_billing_zone_id = source_reseller_bbz.id
+				LEFT JOIN billing.billing_zones_history source_customer_bbz ON cdr.source_customer_billing_zone_id = source_customer_bbz.id
+				LEFT JOIN billing.billing_zones_history destination_carrier_bbz ON cdr.destination_carrier_billing_zone_id = destination_carrier_bbz.id
+				LEFT JOIN billing.billing_zones_history destination_reseller_bbz ON cdr.destination_reseller_billing_zone_id = destination_reseller_bbz.id
+				LEFT JOIN billing.billing_zones_history destination_customer_bbz ON cdr.destination_customer_billing_zone_id = destination_customer_bbz.id
 				LEFT JOIN billing.voip_subscribers source_bvs ON cdr.source_user_id = source_bvs.uuid
 				LEFT JOIN billing.voip_subscribers destination_bvs ON cdr.destination_user_id = destination_bvs.uuid
-			where	cdr.id > ?
+			where	cdr.export_status = 'unexported' AND cdr.id > ?
 		". ($EXPORT_INCOMING eq 'yes' ? '' : "and source_provider_id = 1") ."
 		". ($EXPORT_FAILED eq 'yes' ? '' : "and call_status = 'ok'") ."
 			order by
@@ -164,16 +185,16 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 				last if $EXPORT_UNRATED !~ /y|1|true/i;
 			}
 			else {
-				unless(defined $r->{carrier_zone}) { # platform internal, no peering cost calculated
-					$r->{carrier_cost} = '0.00';
-					$r->{carrier_zone} = 'onnet';
-					$r->{carrier_destination} = 'platform internal';
+				unless(defined $r->{source_carrier_zone}) { # platform internal, no peering cost calculated
+					$r->{source_carrier_cost} = '0.00';
+					$r->{source_carrier_zone} = 'onnet';
+					$r->{source_carrier_destination} = 'platform internal';
 				}
 			}
 
-			$MARKS{lastid} = $r->{id};
 			my $l = join(",", map {(!defined($_) || $_ eq "") ? "''" : "'$_'"} @$r{@CDR_BODY_FIELDS});
 			push(@F, $l);
+			push(@ids, $r->{id});
 		}
 
 		if (!@F && $MARKS{lastseq} != $firstseq) {
@@ -213,9 +234,18 @@ my @CDR_BODY_FIELDS = qw(id update_time source_user_id source_provider_id source
 		print("### successfully moved $tfn to $fn\n");
 		chownmod($fn, $FILES_OWNER, $FILES_GROUP, 0666, $FILES_MASK);
 
+		# update exported cdrs
+		my $ex_sth = $DBH->prepare("UPDATE cdr SET export_status='ok', exported_at=NOW() ".
+						"WHERE id IN (".('?,' x $#ids)."?)");
+		$ex_sth->execute(@ids) or die($DBH->errstr);
+
 		$num < $limit and last;
 	}
 
+	# we don't update the lastid key anymore, as we're now checking for export_status; the lastid check above
+	# is really just for upgrade scenarios to make sure there is no race condition between an updated
+	# exporter is running before ngcp-update-db-schema is executed
+	delete $MARKS{lastid};
 	for my $mk (keys(%MARKS)) {
 		# race me...
 		my $aff = $DBH->do("update mark set acc_id = ? where collector = ?", undef, $MARKS{$mk}, "$COLLID-$mk");
