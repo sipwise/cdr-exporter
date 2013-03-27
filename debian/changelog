@@ -1,3 +1,10 @@
+ngcp-cdr-exporter (1.7.0) unstable; urgency=low
+
+  * Export source/destination rating related fields.
+  * Use export_status as marker.
+
+ -- Andreas Granig <agranig@sipwise.com>  Wed, 27 Mar 2013 09:55:47 +0100
+
 ngcp-cdr-exporter (1.6.0) unstable; urgency=low
 
   * add source_ip to CDR export
