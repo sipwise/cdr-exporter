@@ -253,13 +253,16 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 			print("### No more data\n");
 			last;
 		}
+
 		my $num = scalar(@F);
-		unshift(@F, sprintf('%s,%04i', $VERSION, $num));
 
 		$MARKS{lastseq}++;
 
 		for my $ref ([\@F, 'system'], (map {[$R{$_}, 'resellers', $_]} keys(%R))) {
 			my ($f, @dirs) = @$ref;
+
+			my $num = scalar(@$f);
+			unshift(@$f, sprintf('%s,%04i', $VERSION, $num));
 
 			my $dircomp = $CDRDIR;
 			my @dirlist;
