@@ -1,3 +1,9 @@
+ngcp-cdr-exporter (1.8.0) unstable; urgency=low
+
+  * Export reseller CDRs to separate directories
+
+ -- Richard Fuchs <rfuchs@sipwise.com>  Wed, 07 Aug 2013 11:15:39 -0400
+
 ngcp-cdr-exporter (1.7.0) unstable; urgency=low
 
   * Export source/destination rating related fields.
