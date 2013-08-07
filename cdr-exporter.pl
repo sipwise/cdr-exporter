@@ -99,6 +99,28 @@ my @CDR_BODY_FIELDS = qw(
 	destination_carrier_destination destination_customer_destination 
 	destination_carrier_free_time destination_customer_free_time
 );
+my @CDR_RESELLER_BODY_FIELDS = qw(
+	id update_time 
+	source_user_id source_provider_id source_external_subscriber_id 
+	source_subscriber_id source_external_contract_id source_account_id 
+	source_user source_domain source_cli source_clir source_ip 
+	destination_user_id destination_provider_id destination_external_subscriber_id 
+	destination_subscriber_id destination_external_contract_id destination_account_id 
+	destination_user destination_domain
+	destination_user_in destination_domain_in destination_user_dialed
+	peer_auth_user peer_auth_realm 
+	call_type call_status call_code 
+	init_time start_time duration
+	call_id rating_status rated_at 
+	source_customer_cost 
+	source_customer_zone
+	source_customer_destination 
+	source_customer_free_time
+	destination_customer_cost 
+	destination_customer_zone
+	destination_customer_destination 
+	destination_customer_free_time
+);
 
 {
 	my ($dir1, $dir2, $ts);
@@ -127,6 +149,8 @@ my @CDR_BODY_FIELDS = qw(
 
 	my $limit = 5000;
 	my $firstseq = $MARKS{lastseq};
+
+	my $reseller_name_sth = $DBH->prepare('select name from billing.resellers where id = ?');
 
 	for (;;) {
 		print("--- Starting CDR export\n");
@@ -178,7 +202,7 @@ my @CDR_BODY_FIELDS = qw(
 
 		$s->execute($MARKS{lastid}) or die($DBH->errstr);
 
-		my @F;
+		my (@F, %R, %RNAME);
 		while (my $r = $s->fetchrow_hashref()) {
 			# finish export to give rate-o-mat time to catch up
 			if ($r->{rating_status} eq 'unrated') {
@@ -195,6 +219,34 @@ my @CDR_BODY_FIELDS = qw(
 			my $l = join(",", map {(!defined($_) || $_ eq "") ? "''" : "'$_'"} @$r{@CDR_BODY_FIELDS});
 			push(@F, $l);
 			push(@ids, $r->{id});
+
+			my $l_r = join(",", map {(!defined($_) || $_ eq "") ? "''" : "'$_'"} @$r{@CDR_RESELLER_BODY_FIELDS});
+			my %rid_used;
+			for my $dir (qw(source destination)) {
+				my $xuid = $r->{$dir . '_user_id'};
+				$xuid or next;
+
+				my $rid = $r->{$dir . '_provider_id'};
+				$rid or next;
+				$rid_used{$rid} and next;
+				$rid_used{$rid} = 1;
+
+				my $rname = $RNAME{$rid};
+				if (!defined($rname)) {
+					$reseller_name_sth->execute($rid);
+					($rname) = $reseller_name_sth->fetchrow_array;
+					if (!$rname) {
+						$RNAME{$rid} = '';
+						next;
+					}
+					$rname =~ s,/,_,gs;
+					$rname =~ s,\0,,gs;
+					$RNAME{$rid} = $rname;
+				}
+				$rname eq '' and next;
+
+				push(@{$R{$rname}}, $l_r);
+			}
 		}
 
 		if (!@F && $MARKS{lastseq} != $firstseq) {
@@ -205,34 +257,46 @@ my @CDR_BODY_FIELDS = qw(
 		unshift(@F, sprintf('%s,%04i', $VERSION, $num));
 
 		$MARKS{lastseq}++;
-		for my $dd ("$CDRDIR/$dir1", "$CDRDIR/$dir1/$dir2") {
-			if (! -d $dd) {
-				mkdir($dd) or die("failed to create target directory $dd ($!), stop");
-				chownmod($dd, $FILES_OWNER, $FILES_GROUP, 0777, $FILES_MASK);
+
+		for my $ref ([\@F, 'system'], (map {[$R{$_}, 'resellers', $_]} keys(%R))) {
+			my ($f, @dirs) = @$ref;
+
+			my $dircomp = $CDRDIR;
+			my @dirlist;
+			for my $dirpart (@dirs, $dir1, $dir2) {
+				$dircomp .= "/$dirpart";
+				push(@dirlist, $dircomp);
 			}
+
+			for my $dd (@dirlist) {
+				if (! -d $dd) {
+					mkdir($dd) or die("failed to create target directory $dd ($!), stop");
+					chownmod($dd, $FILES_OWNER, $FILES_GROUP, 0777, $FILES_MASK);
+				}
+			}
+			my $fn = sprintf('%s/%s_%s_%s_%010i.cdr', $dircomp, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
+			my $tfn = sprintf('%s/%s_%s_%s_%010i.cdr.'.$$, $dircomp, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
+			my $fd;
+			open($fd, ">", $tfn) or die("failed to open tmp-file $tfn ($!), stop");
+			my $ctx = Digest::MD5->new;
+
+			for my $l (@$f) {
+				my $ol = "$l\n";
+				print $fd ($ol);
+				$ctx->add($ol);
+			}
+
+			my $md5 = $ctx->hexdigest;
+			print $fd ("$md5\n");
+
+			print("### $num data lines written to $tfn, checksum is $md5\n");
+			close($fd) or die ("failed to close tmp-file $tfn ($!), stop");
+			undef($ctx);
+
+			rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop");
+			print("### successfully moved $tfn to $fn\n");
+			chownmod($fn, $FILES_OWNER, $FILES_GROUP, 0666, $FILES_MASK);
 		}
-		my $fn = sprintf('%s/%s/%s/%s_%s_%s_%010i.cdr', $CDRDIR, $dir1, $dir2, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
-		my $tfn = sprintf('%s/%s/%s/%s_%s_%s_%010i.cdr.'.$$, $CDRDIR, $dir1, $dir2, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
-		my $fd;
-		open($fd, ">", $tfn) or die("failed to open tmp-file $tfn ($!), stop");
-		my $ctx = Digest::MD5->new;
-
-		for my $l (@F) {
-			my $ol = "$l\n";
-			print $fd ($ol);
-			$ctx->add($ol);
-		}
-
-		my $md5 = $ctx->hexdigest;
-		print $fd ("$md5\n");
-
-		print("### $num data lines written to $tfn, checksum is $md5\n");
-		close($fd) or die ("failed to close tmp-file $tfn ($!), stop");
-		undef($ctx);
-
-		rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop");
-		print("### successfully moved $tfn to $fn\n");
-		chownmod($fn, $FILES_OWNER, $FILES_GROUP, 0666, $FILES_MASK);
 
 		# update exported cdrs
 		my $ex_sth = $DBH->prepare("UPDATE cdr SET export_status='ok', exported_at=NOW() ".
