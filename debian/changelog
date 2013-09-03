@@ -1,3 +1,9 @@
+ngcp-cdr-exporter (1.8.1) unstable; urgency=low
+
+  * Add reseller fields to CSV files
+
+ -- Richard Fuchs <rfuchs@sipwise.com>  Tue, 03 Sep 2013 17:49:18 -0400
+
 ngcp-cdr-exporter (1.8.0) unstable; urgency=low
 
   * Export reseller CDRs to separate directories
