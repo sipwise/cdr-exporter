@@ -78,25 +78,25 @@ my $NOW = time();
 my @NOW = localtime($NOW);
 
 my @CDR_BODY_FIELDS = qw(
-	id update_time 
-	source_user_id source_provider_id source_external_subscriber_id 
-	source_subscriber_id source_external_contract_id source_account_id 
-	source_user source_domain source_cli source_clir source_ip 
-	destination_user_id destination_provider_id destination_external_subscriber_id 
-	destination_subscriber_id destination_external_contract_id destination_account_id 
+	id update_time
+	source_user_id source_provider_id source_external_subscriber_id
+	source_subscriber_id source_external_contract_id source_account_id
+	source_user source_domain source_cli source_clir source_ip
+	destination_user_id destination_provider_id destination_external_subscriber_id
+	destination_subscriber_id destination_external_contract_id destination_account_id
 	destination_user destination_domain
 	destination_user_in destination_domain_in destination_user_dialed
-	peer_auth_user peer_auth_realm 
-	call_type call_status call_code 
+	peer_auth_user peer_auth_realm
+	call_type call_status call_code
 	init_time start_time duration
-	call_id rating_status rated_at 
-	source_carrier_cost source_customer_cost 
+	call_id rating_status rated_at
+	source_carrier_cost source_customer_cost
 	source_carrier_zone source_customer_zone
-	source_carrier_destination source_customer_destination 
+	source_carrier_destination source_customer_destination
 	source_carrier_free_time source_customer_free_time
-	destination_carrier_cost destination_customer_cost 
+	destination_carrier_cost destination_customer_cost
 	destination_carrier_zone destination_customer_zone
-	destination_carrier_destination destination_customer_destination 
+	destination_carrier_destination destination_customer_destination
 	destination_carrier_free_time destination_customer_free_time
 	source_reseller_cost
 	source_reseller_zone
@@ -108,25 +108,25 @@ my @CDR_BODY_FIELDS = qw(
 	destination_reseller_free_time
 );
 my @CDR_RESELLER_BODY_FIELDS = qw(
-	id update_time 
-	source_user_id source_provider_id source_external_subscriber_id 
-	source_subscriber_id source_external_contract_id source_account_id 
-	source_user source_domain source_cli source_clir source_ip 
-	destination_user_id destination_provider_id destination_external_subscriber_id 
-	destination_subscriber_id destination_external_contract_id destination_account_id 
+	id update_time
+	source_user_id source_provider_id source_external_subscriber_id
+	source_subscriber_id source_external_contract_id source_account_id
+	source_user source_domain source_cli source_clir source_ip
+	destination_user_id destination_provider_id destination_external_subscriber_id
+	destination_subscriber_id destination_external_contract_id destination_account_id
 	destination_user destination_domain
 	destination_user_in destination_domain_in destination_user_dialed
-	peer_auth_user peer_auth_realm 
-	call_type call_status call_code 
+	peer_auth_user peer_auth_realm
+	call_type call_status call_code
 	init_time start_time duration
-	call_id rating_status rated_at 
-	source_customer_cost 
+	call_id rating_status rated_at
+	source_customer_cost
 	source_customer_zone
-	source_customer_destination 
+	source_customer_destination
 	source_customer_free_time
-	destination_customer_cost 
+	destination_customer_cost
 	destination_customer_zone
-	destination_customer_destination 
+	destination_customer_destination
 	destination_customer_free_time
 );
 
