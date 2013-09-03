@@ -98,6 +98,14 @@ my @CDR_BODY_FIELDS = qw(
 	destination_carrier_zone destination_customer_zone
 	destination_carrier_destination destination_customer_destination 
 	destination_carrier_free_time destination_customer_free_time
+	source_reseller_cost
+	source_reseller_zone
+	source_reseller_destination
+	source_reseller_free_time
+	destination_reseller_cost
+	destination_reseller_zone
+	destination_reseller_destination
+	destination_reseller_free_time
 );
 my @CDR_RESELLER_BODY_FIELDS = qw(
 	id update_time 
