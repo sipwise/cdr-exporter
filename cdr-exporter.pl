@@ -201,7 +201,7 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 				LEFT JOIN billing.voip_subscribers source_bvs ON cdr.source_user_id = source_bvs.uuid
 				LEFT JOIN billing.voip_subscribers destination_bvs ON cdr.destination_user_id = destination_bvs.uuid
 			where	cdr.export_status = 'unexported' AND cdr.id > ?
-		". ($EXPORT_INCOMING eq 'yes' ? '' : "and source_provider_id = 1") ."
+		". ($EXPORT_INCOMING eq 'yes' ? '' : "and source_user_id != '0'") ."
 		". ($EXPORT_FAILED eq 'yes' ? '' : "and call_status = 'ok'") ."
 			order by
 				cdr.id
