@@ -1,3 +1,9 @@
+ngcp-cdr-exporter (1.8.3) unstable; urgency=low
+
+  * Fix ID/name association for resellers
+
+ -- Richard Fuchs <rfuchs@sipwise.com>  Wed, 30 Oct 2013 12:47:56 -0400
+
 ngcp-cdr-exporter (1.8.2) unstable; urgency=low
 
   * Fix reseller export when export-incoming is set to no
