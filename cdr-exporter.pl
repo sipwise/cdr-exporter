@@ -158,7 +158,7 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 	my $limit = 5000;
 	my $firstseq = $MARKS{lastseq};
 
-	my $reseller_name_sth = $DBH->prepare('select name from billing.resellers where id = ?');
+	my $reseller_name_sth = $DBH->prepare('select name from billing.resellers where contract_id = ?');
 
 	for (;;) {
 		print("--- Starting CDR export\n");
