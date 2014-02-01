@@ -1,3 +1,9 @@
+ngcp-cdr-exporter (1.8.3+0~mr3.2.1) unstable; urgency=low
+
+  * New release.
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Sat, 01 Feb 2014 19:36:47 +0100
+
 ngcp-cdr-exporter (1.8.3) unstable; urgency=low
 
   * Fix ID/name association for resellers
