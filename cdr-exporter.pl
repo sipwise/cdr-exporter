@@ -98,6 +98,7 @@ my @CDR_BODY_FIELDS = qw(
 	destination_carrier_zone destination_customer_zone
 	destination_carrier_destination destination_customer_destination 
 	destination_carrier_free_time destination_customer_free_time
+    fci_data
 );
 
 {
@@ -158,7 +159,8 @@ my @CDR_BODY_FIELDS = qw(
 				destination_carrier_free_time,	destination_reseller_free_time,  destination_customer_free_time,
 				destination_carrier_bbz.zone AS destination_carrier_zone, destination_reseller_bbz.zone AS destination_reseller_zone,
 				destination_customer_bbz.zone AS destination_customer_zone, destination_carrier_bbz.detail AS destination_carrier_destination,
-				destination_reseller_bbz.detail AS destination_reseller_destination, destination_customer_bbz.detail AS destination_customer_destination
+				destination_reseller_bbz.detail AS destination_reseller_destination, destination_customer_bbz.detail AS destination_customer_destination,
+                fci_data
 			from	accounting.cdr
 				LEFT JOIN billing.billing_zones_history source_carrier_bbz ON cdr.source_carrier_billing_zone_id = source_carrier_bbz.id
 				LEFT JOIN billing.billing_zones_history source_reseller_bbz ON cdr.source_reseller_billing_zone_id = source_reseller_bbz.id
