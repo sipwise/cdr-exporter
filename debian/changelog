@@ -1,3 +1,9 @@
+ngcp-cdr-exporter (1.9.0.0+0~mr3.3.0.0) unstable; urgency=low
+
+  * [1918f2b] MT#6169 Warning obsolete-relation-form-in-source has been fixed
+
+ -- Alexander Lutay <alutay@sipwise.com>  Fri, 21 Mar 2014 15:14:34 +0100
+
 ngcp-cdr-exporter (1.8.3+0~mr3.3) unstable; urgency=low
 
   * New release.
