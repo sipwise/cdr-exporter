@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.8.3.1+0~mr3.2.1.1) unstable; urgency=low
+
+  [ Alexander Lutay ]
+  * [376355f] MT#6169 Warning obsolete-relation-form-in-source has been fixed
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Fri, 21 Mar 2014 17:22:15 +0100
+
 ngcp-cdr-exporter (1.8.3+0~mr3.2.1) unstable; urgency=low
 
   * New release.
