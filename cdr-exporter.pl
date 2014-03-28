@@ -81,7 +81,7 @@ my @CDR_BODY_FIELDS = qw(
 	id update_time 
 	source_user_id source_provider_id source_external_subscriber_id 
 	source_subscriber_id source_external_contract_id source_account_id 
-	source_user source_domain source_cli source_clir source_ip 
+	source_user source_domain source_cli source_div source_clir source_ip 
 	destination_user_id destination_provider_id destination_external_subscriber_id 
 	destination_subscriber_id destination_external_contract_id destination_account_id 
 	destination_user destination_domain
@@ -138,7 +138,7 @@ my @CDR_BODY_FIELDS = qw(
 				source_external_subscriber_id,	source_bvs.id AS source_subscriber_id,
 				source_external_contract_id,	source_account_id,
 				source_user,		source_domain,
-				source_cli,		source_clir, source_ip,
+				source_cli,	source_div,	source_clir, source_ip,
 				destination_user_id,	destination_provider_id,
 				destination_external_subscriber_id,	destination_bvs.id AS destination_subscriber_id,
 				destination_external_contract_id,	destination_account_id,
