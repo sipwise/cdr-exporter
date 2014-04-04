@@ -194,7 +194,7 @@ my @CDR_BODY_FIELDS = qw(
 				}
 			}
 
-			my $l = join(",", map {(!defined($_) || $_ eq "") ? "''" : "'$_'"} @$r{@CDR_BODY_FIELDS});
+			my $l = join("|", map {(!defined($_) || $_ eq "") ? "''" : "'$_'"} @$r{@CDR_BODY_FIELDS});
 			push(@F, $l);
 			push(@ids, $r->{id});
 		}
