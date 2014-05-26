@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.9.1.0+0~mr3.3.1.0) unstable; urgency=low
+
+  [ Michael Prokop ]
+  * [b6e17bd] MT#6511 Bump Standards-Version to 3.9.5
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 26 May 2014 15:34:26 +0200
+
 ngcp-cdr-exporter (1.9.0.0+0~mr3.3.0.0) unstable; urgency=low
 
   * [1918f2b] MT#6169 Warning obsolete-relation-form-in-source has been fixed
