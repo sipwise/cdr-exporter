@@ -24,8 +24,10 @@ my @fields = (
     'billing.contacts.company',
     'billing.voip_subscribers.external_id',
     'concat(voip_numbers_tmp.cc, voip_numbers_tmp.ac, voip_numbers_tmp.sn)',
-    'accounting.events.old_status',
-    'accounting.events.new_status',
+    #'accounting.events.old_status',
+    'old_profile.name',
+    #'accounting.events.new_status',
+    'new_profile.name',
     'from_unixtime(accounting.events.timestamp)',
 );
 my @joins = (
@@ -34,6 +36,8 @@ my @joins = (
     { 'billing.contracts' => { 'billing.contracts.id' => 'billing.voip_subscribers.contract_id' } },
     { 'billing.contacts' => { 'billing.contacts.id' => 'billing.contracts.contact_id' } },
     { '(select vn1.* from billing.voip_numbers vn1 left outer join billing.voip_numbers vn2 on vn1.subscriber_id = vn2.subscriber_id and vn1.id > vn2.id) as voip_numbers_tmp' => { 'billing.voip_subscribers.id' => 'voip_numbers_tmp.subscriber_id' } },
+    { 'provisioning.voip_subscriber_profiles as old_profile' => { 'old_profile.id' => 'accounting.events.old_status' } },
+    { 'provisioning.voip_subscriber_profiles as new_profile' => { 'new_profile.id' => 'accounting.events.new_status' } },
 
 );
 my @conditions = (
@@ -49,7 +53,7 @@ my @intjoins = ();
 foreach my $f(@joins) {
     my ($table, $keys) = %{ $f };
     my ($foreign_key, $own_key) = %{ $keys };
-    push @intjoins, "join $table on $foreign_key = $own_key";
+    push @intjoins, "left outer join $table on $foreign_key = $own_key";
 }
 my @conds = ();
 foreach my $f(@conditions) {
