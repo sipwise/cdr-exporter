@@ -5,12 +5,12 @@ use v5.14;
 use DBI;
 use NGCP::CDR::Export;
 
-my $debug = 0;
+my $debug = 1;
 
 my $max_rec_idx = 5000;
 
 sub DEBUG {
-    say $_;
+    say join (' ', @_);
 }
 
 my $dbh = DBI->connect('DBI:mysql:accounting', 'export', 'export')
@@ -33,14 +33,13 @@ my @joins = (
     { 'billing.voip_subscribers' => { 'billing.voip_subscribers.uuid' => 'provisioning.voip_subscribers.uuid' } },
     { 'billing.contracts' => { 'billing.contracts.id' => 'billing.voip_subscribers.contract_id' } },
     { 'billing.contacts' => { 'billing.contacts.id' => 'billing.contracts.contact_id' } },
-    # TODO: select the billing.voip_numbers with the highest id for a subscriber?
-    { '(select vn1.* from billing.voip_numbers vn1 join billing.voip_numbers vn2 on vn1.subscriber_id = vn2.subscriber_id and vn1.id > vn2.id) as voip_numbers_tmp' => { 'billing.voip_subscribers.id' => 'voip_numbers_tmp.subscriber_id' } },
+    { '(select vn1.* from billing.voip_numbers vn1 left outer join billing.voip_numbers vn2 on vn1.subscriber_id = vn2.subscriber_id and vn1.id > vn2.id) as voip_numbers_tmp' => { 'billing.voip_subscribers.id' => 'voip_numbers_tmp.subscriber_id' } },
 
 );
 my @conditions = (
     { 'accounting.events.export_status' => { '=' => '"unexported"' } },
-    { 'accounting.events.timestamp' => { '>=' => 'unix_timestamp(date_sub(concat(curdate()," 00:00:00"), interval 1 day))' } },
-    { 'accounting.events.timestamp' => { '<' => 'unix_timestamp(concat(curdate()," 00:00:00"))' } },
+#    { 'accounting.events.timestamp' => { '>=' => 'unix_timestamp(date_sub(concat(curdate()," 00:00:00"), interval 1 day))' } },
+#    { 'accounting.events.timestamp' => { '<' => 'unix_timestamp(concat(curdate()," 00:00:00"))' } },
 );
 my @trailer = (
     { 'order by' => 'accounting.events.id' },
