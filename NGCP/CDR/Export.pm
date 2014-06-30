@@ -2,6 +2,43 @@ package NGCP::CDR::Export;
 
 use Digest::MD5;
 
+sub get_mark {
+    my ($dbh, $name) = @_;
+    my %marks = ();
+    my $s = $dbh->prepare("select acc_id from accounting.mark where collector = ?");
+    for my $mk (qw(lastid lastseq)) {
+            $s->execute("$name-$mk") or die($dbh->errstr);
+            my $r = $s->fetch;
+            $marks{$mk} = ($r && $r->[0]) ? $r->[0] : 0;
+    }
+    return \%marks;
+}
+
+sub set_mark {
+    my ($dbh, $name, $mark) = @_;
+    my $s = $dbh->prepare("select acc_id from accounting.mark where collector = ?");
+    my $i = $dbh->prepare("insert into accounting.mark (collector, acc_id) values(?,?)");
+    my $u = $dbh->prepare("update accounting.mark set acc_id = ? where collector = ?");
+    for my $mk (keys %{ $mark }) {
+            $s->execute("$name-$mk") or die($dbh->errstr);
+            my $r = $s->fetch;
+            if($r && $r->[0]) {
+                $u->execute($mark->{$mk}, "$name-$mk");
+            } else {
+                $i->execute("$name-$mk", $mark->{$mk});
+            }
+    }
+}
+
+sub update_export_status{
+    my ($dbh, $tbl, $ids) = @_;
+    return unless(@{ $ids });
+    my $u = $dbh->prepare("update $tbl set export_status='ok', exported_at=now()" .
+      " where id in (" . join (',', map { '?' }(1 .. @{ $ids }) ) . ")");
+    $u->execute(@{ $ids }) or die($dbh->errstr);
+}
+
+
 sub get_ts_for_filename {
     my $now = time;
     my @now = localtime($now);
@@ -24,7 +61,6 @@ sub chownmod {
 sub write_file {
     my (
         $lines, $dircomp, $prefix, $version, $ts, $lastseq, $suffix, 
-        $files_owner, $files_group, $files_mask
     ) = @_;
     my $fn =  sprintf('%s/%s_%s_%s_%010i.%s', $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
     my $tfn = sprintf('%s/%s_%s_%s_%010i.%s.'.$$, $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
@@ -50,7 +86,6 @@ sub write_file {
 
     rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop");
     print("### successfully moved $tfn to $fn\n");
-    chownmod($fn, $files_owner, $files_group, 0666, $files_mask);
 }
 
 1;

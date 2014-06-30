@@ -3,51 +3,117 @@ use strict;
 use v5.14;
 
 use DBI;
+use File::Temp;
+use File::Copy;
 use NGCP::CDR::Export;
 
-my $debug = 1;
+our $DBHOST;
+our $DBUSER;
+our $DBPASS;
+our $DBDB;
 
-my $max_rec_idx = 5000;
+our $MAX_ROWS_PER_FILE;
+our $EDRDIR;
+
+our $PREFIX = 'sipwise';
+our $VERSION = '001';
+our $SUFFIX = 'edr';
+our $FILES_OWNER = 'cdrexport';
+our $FILES_GROUP = 'cdrexport';
+our $FILES_MASK = '022';
+
+our $EXPORT_FIELDS;
+our $EXPORT_JOINS;
+our $EXPORT_CONDITIONS;
+
+my $collid = "eventexporter";
+my $debug = 0;
+
 
 sub DEBUG {
     say join (' ', @_);
 }
 
+my @config_paths = (qw#
+    /etc/ngcp-cdr-exporter/
+    .
+#);
+
+
+my $cf = 'event-exporter.conf';
+my $config_file;
+foreach my $cp(@config_paths) {
+    if(-f "$cp/$cf") {
+        $config_file = "$cp/$cf";
+        last;
+    }
+}
+die "Config file $cf not found in path " . (join " or ", @config_paths) . "\n"
+    unless $config_file;
+
+open my $CONFIG, "$config_file" or die "Couldn't open the configuration file '$config_file'.\n";
+
+while (<$CONFIG>) {
+    chomp;                  # no newline
+    s/^\s+//;               # no leading white
+    s/^#.*//;                # no comments
+    s/\s+$//;               # no trailing white
+    next unless length;     # anything left?
+    my ($var, $value) = split(/\s*=\s*/, $_, 2);
+        no strict 'refs';
+        $$var = $value;
+}
+close $CONFIG;
+
+die "Invalid destination directory '$EDRDIR'\n"
+    unless(-d $EDRDIR);
+
+
+my @fields = ();
+foreach my $f(split('\'\s*,\s*\#?\s*\'', $EXPORT_FIELDS)) {
+    $f =~ s/^\'//; $f =~ s/\'$//;
+    push @fields, $f;
+}
+
+my @joins = ();
+foreach my $f(split('\}\s*,\s*{', $EXPORT_JOINS)) {
+    $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
+    my ($a, $b) = split('\s*=>\s*{\s*', $f);
+    $a =~ s/^\s*\'//; $a =~ s/\'$//g;
+    $b =~ s/\s*\}\s*$//;
+
+    my ($c, $d) = split('\s*=>\s*', $b);
+    $c =~ s/^\s*\'//g; $c =~ s/\'\s*//;
+    $d =~ s/^\s*\'//g; $d =~ s/\'\s*//;
+    push @joins, { $a => { $c => $d } };
+}
+
+my @conditions = ();
+foreach my $f(split('\}\s*,\s*{', $EXPORT_CONDITIONS)) {
+    $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
+    my ($a, $b) = split('\s*=>\s*{\s*', $f);
+    $a =~ s/^\s*\'//; $a =~ s/\'$//g;
+    $b =~ s/\s*\}\s*$//;
+
+    my ($c, $d) = split('\s*=>\s*', $b);
+    $c =~ s/^\s*\'//g; $c =~ s/\'\s*//;
+    $d =~ s/^\s*\'//g; $d =~ s/\'\s*//;
+    push @conditions, { $a => { $c => $d } };
+}
+
 my $dbh = DBI->connect('DBI:mysql:accounting', 'export', 'export')
     or die "failed to connect to db: $DBI::errstr";
 $dbh->{mysql_auto_reconnect} = 1;
+$dbh->{AutoCommit} = 0;
 
-my @fields = (
-    'accounting.events.id',
-    'accounting.events.type',
-    'billing.contracts.external_id',
-    'billing.contacts.company',
-    'billing.voip_subscribers.external_id',
-    'concat(voip_numbers_tmp.cc, voip_numbers_tmp.ac, voip_numbers_tmp.sn)',
-    #'accounting.events.old_status',
-    'old_profile.name',
-    #'accounting.events.new_status',
-    'new_profile.name',
-    'from_unixtime(accounting.events.timestamp)',
-);
-my @joins = (
-    { 'provisioning.voip_subscribers' => { 'provisioning.voip_subscribers.id' => 'accounting.events.subscriber_id' } },
-    { 'billing.voip_subscribers' => { 'billing.voip_subscribers.uuid' => 'provisioning.voip_subscribers.uuid' } },
-    { 'billing.contracts' => { 'billing.contracts.id' => 'billing.voip_subscribers.contract_id' } },
-    { 'billing.contacts' => { 'billing.contacts.id' => 'billing.contracts.contact_id' } },
-    { '(select vn1.* from billing.voip_numbers vn1 left outer join billing.voip_numbers vn2 on vn1.subscriber_id = vn2.subscriber_id and vn1.id > vn2.id) as voip_numbers_tmp' => { 'billing.voip_subscribers.id' => 'voip_numbers_tmp.subscriber_id' } },
-    { 'provisioning.voip_subscriber_profiles as old_profile' => { 'old_profile.id' => 'accounting.events.old_status' } },
-    { 'provisioning.voip_subscriber_profiles as new_profile' => { 'new_profile.id' => 'accounting.events.new_status' } },
 
-);
-my @conditions = (
-    { 'accounting.events.export_status' => { '=' => '"unexported"' } },
-#    { 'accounting.events.timestamp' => { '>=' => 'unix_timestamp(date_sub(concat(curdate()," 00:00:00"), interval 1 day))' } },
-#    { 'accounting.events.timestamp' => { '<' => 'unix_timestamp(concat(curdate()," 00:00:00"))' } },
-);
 my @trailer = (
     { 'order by' => 'accounting.events.id' },
 );
+
+unless($fields[0] eq "accounting.events.id") {
+    die "First field must always be 'accounting.events.id'\n";
+}
 
 my @intjoins = ();
 foreach my $f(@joins) {
@@ -68,6 +134,7 @@ foreach my $f(@trailer) {
 }
 
 my $file_ts = NGCP::CDR::Export::get_ts_for_filename;
+my $mark = NGCP::CDR::Export::get_mark($dbh, $collid);
 
 my $q = "select " . 
     join(", ", @fields) . " from accounting.events " . 
@@ -77,12 +144,15 @@ my $q = "select " .
 
 DEBUG $q if $debug;
 
+my $tempfh = File::Temp->newdir(undef, CLEANUP => 1);
+my $tempdir = $tempfh->dirname;
+
 my $sth = $dbh->prepare($q);
 $sth->execute();
 
-# TODO: get file_idx from lastseq in db
-my ($rec_idx, $file_idx) = (0, 0);
+my ($rec_idx, $file_idx) = (0, $mark->{lastseq});
 my @lines = ();
+my @ids = ();
 my $rows = $sth->fetchall_arrayref();
 while(my $row = shift @{ $rows }) {
     my @fields = map { defined $_ ? "\"$_\"" : '""' } @{ $row };
@@ -91,16 +161,40 @@ while(my $row = shift @{ $rows }) {
 
     $rec_idx++;
 
-    if($rec_idx >= $max_rec_idx || @{ $rows } == 0) {
+    if(($MAX_ROWS_PER_FILE && $rec_idx >= $MAX_ROWS_PER_FILE) || @{ $rows } == 0) {
         $rec_idx = 0;
         $file_idx++;
 
         NGCP::CDR::Export::write_file(
-            \@lines, '/tmp', 'swpbx', 'v001', $file_ts, $file_idx, 'edr',
-            'agranig', 'agranig', '022',
+            \@lines, $tempdir, $PREFIX, $VERSION, $file_ts, $file_idx, $SUFFIX,
         );
         @lines = ();
     }
+    push @ids, $row->[0];
 }
+# write empty file in case of no records
+unless(@ids) {
+    NGCP::CDR::Export::write_file(
+        \@lines, $tempdir, $PREFIX, $VERSION, $file_ts, $file_idx, $SUFFIX,
+    );
+}
+
+NGCP::CDR::Export::update_export_status($dbh, "accounting.events", \@ids);
+NGCP::CDR::Export::set_mark($dbh, $collid, { lastseq => $file_idx });
+
+$dbh->commit or die("failed to commit db changes: " . $dbh->errstr);
+
+opendir(my $fh, $tempdir);
+foreach my $file(readdir($fh)) {
+    my $src = "$tempdir/$file";
+    my $dst = "$EDRDIR/$file";
+    if(-f $src) {
+        DEBUG "+++ moving $src to $dst\n";
+        copy($src, $dst);
+        NGCP::CDR::Export::chownmod($dst, $FILES_OWNER, $FILES_GROUP, 0666, $FILES_MASK);
+    }
+}
+close($fh);
+
 
 # vim: set tabstop=4 expandtab:
