@@ -6,6 +6,7 @@ use DBI;
 use File::Temp;
 use File::Copy;
 use NGCP::CDR::Export;
+use NGCP::CDR::Transfer;
 
 our $DBHOST;
 our $DBUSER;
@@ -21,6 +22,13 @@ our $SUFFIX = 'edr';
 our $FILES_OWNER = 'cdrexport';
 our $FILES_GROUP = 'cdrexport';
 our $FILES_MASK = '022';
+
+our $TRANSFER_TYPE = "none";
+our $TRANSFER_HOST;
+our $TRANSFER_PORT = 22;
+our $TRANSFER_USER = "cdrexport";
+our $TRANSFER_PASS;
+our $TRANSFER_REMOTE = "/home/jail/home/cdrexport";
 
 our $EXPORT_FIELDS;
 our $EXPORT_JOINS;
@@ -189,9 +197,17 @@ foreach my $file(readdir($fh)) {
     my $src = "$tempdir/$file";
     my $dst = "$EDRDIR/$file";
     if(-f $src) {
-        DEBUG "+++ moving $src to $dst\n";
+        DEBUG "### moving $src to $dst\n";
         copy($src, $dst);
         NGCP::CDR::Export::chownmod($dst, $FILES_OWNER, $FILES_GROUP, 0666, $FILES_MASK);
+        if($TRANSFER_TYPE eq "sftp") {
+            NGCP::CDR::Transfer::sftp(
+                $dst, $TRANSFER_HOST, $TRANSFER_PORT, 
+                $TRANSFER_REMOTE, $TRANSFER_USER, $TRANSFER_PASS,
+            );
+        }
+
+
     }
 }
 close($fh);
