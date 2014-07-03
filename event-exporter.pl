@@ -172,19 +172,16 @@ my @filter_ids = ();
 while(my $row = shift @{ $rows }) {
     my @head = @{ $row }[0 .. 4];
     my ($id, $sub_id, $type, $old, $new) = @head;
-    my @fields = map { defined $_ ? "\"$_\"" : '""' } @{ $row }[5,-1];
+    my @fields = map { defined $_ ? "\"$_\"" : '""' } (@{ $row }[5 .. @{ $row }-1]);
 
-
-    # this only works if events are not spread across export files;
-    # we might gather infos first, then export in chunks later to make it work
     if($FILTER_FLAPPING) {
         if($type =~ /^start_(.+)$/) {
             my $t = $1;
             my $k = "$sub_id;$t;$new";
             unless(exists $filter{$k}) {
-                $filter{$k} = { id => $id, c => 1 };
+                $filter{$k} = [$id];
             } else {
-                $filter{$k}->{c}++;
+                push @{ $filter{$k} }, $id;
             }
             my $line = join ",", @fields;
             $lines{$id} = $line;
@@ -192,13 +189,14 @@ while(my $row = shift @{ $rows }) {
         } elsif($type =~ /^end_(.+)$/) {
             my $t = $1;
             my $k = "$sub_id;$t;$old";
-            my $entry = $filter{$k};
-            if(defined $filter{$k} && $filter{$k}->{c} > 0) {
-                say "... id $id is an end event of id " . $filter{$k}->{id} . ", filter";
-               push @filter_ids, ($id, $filter{$k}->{id});
-               delete $lines{$filter{$k}->{id}};
-               $rec_idx--;
-               $filter{$k}->{c}--;
+            my $ids = $filter{$k} // [];
+            if(@{ $ids }) {
+                my $old_id = pop @{ $ids }; 
+                say "... id $id is an end event of id $old_id, filter";
+                push @filter_ids, ($id, $old_id);
+                delete $lines{$old_id};
+                $rec_idx--;
+                $filter{$k} = $ids;
             } else {
                 my $line = join ",", @fields;
                 $lines{$id} = $line;
@@ -215,31 +213,26 @@ while(my $row = shift @{ $rows }) {
         $rec_idx++;
     }
 
-    if(($MAX_ROWS_PER_FILE && $rec_idx >= $MAX_ROWS_PER_FILE) || @{ $rows } == 0) {
-        say "--- rec_idx=$rec_idx, row count=".@{ $rows };
-        $rec_idx = 0;
-        $file_idx++;
-
-        my @vals = map { $lines{$_} } sort { int($a) <=> int($b) } keys %lines;
-        my @ids = keys %lines;
-        NGCP::CDR::Export::write_file(
-            \@vals, $tempdir, $PREFIX, $VERSION, $file_ts, $file_idx, $SUFFIX,
-        );
-        NGCP::CDR::Export::update_export_status($dbh, "accounting.events", \@filter_ids, "filtered");
-        NGCP::CDR::Export::update_export_status($dbh, "accounting.events", \@ids, "ok");
-        %lines = ();
-        $written = 1; # make sure to not write another empty file
-    }
 }
-# write empty file in case of no records
-unless($written) {
+
+my @vals = map { $lines{$_} } sort { int($a) <=> int($b) } keys %lines;
+my @ids = keys %lines;
+my $max = $MAX_ROWS_PER_FILE // $rec_idx;
+do {
+    my $recs = ($rec_idx > $max) ? $max : $rec_idx;
+
     $file_idx++;
-    my @lines = ();
+    my @filevals = @vals[0 .. $recs-1];
+    @vals = @vals[$recs .. @vals-1];
     NGCP::CDR::Export::write_file(
-        \@lines, $tempdir, $PREFIX, $VERSION, $file_ts, $file_idx, $SUFFIX,
+        \@filevals, $tempdir, $PREFIX, $VERSION, $file_ts, $file_idx, $SUFFIX,
     );
-}
+    $rec_idx -= $recs;
 
+} while($rec_idx > 0);
+
+NGCP::CDR::Export::update_export_status($dbh, "accounting.events", \@filter_ids, "filtered");
+NGCP::CDR::Export::update_export_status($dbh, "accounting.events", \@ids, "ok");
 NGCP::CDR::Export::set_mark($dbh, $collid, { lastseq => $file_idx });
 
 $dbh->commit or die("failed to commit db changes: " . $dbh->errstr);
