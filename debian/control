@@ -9,6 +9,7 @@ Homepage: http://sipwise.com/
 Package: ngcp-cdr-exporter
 Architecture: all
 Depends: libclass-dbi-mysql-perl,
+         libio-pty-perl,
          libnet-sftp-foreign-perl,
          perl-modules,
          ${misc:Depends},

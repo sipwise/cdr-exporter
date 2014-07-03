@@ -22,7 +22,7 @@ sub set_mark {
     for my $mk (keys %{ $mark }) {
             $s->execute("$name-$mk") or die($dbh->errstr);
             my $r = $s->fetch;
-            if($r && $r->[0]) {
+            if($r && defined $r->[0]) {
                 $u->execute($mark->{$mk}, "$name-$mk");
             } else {
                 $i->execute("$name-$mk", $mark->{$mk});

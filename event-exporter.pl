@@ -193,6 +193,7 @@ while(my $row = shift @{ $rows }) {
 }
 # write empty file in case of no records
 unless(@ids) {
+    $file_idx++;
     NGCP::CDR::Export::write_file(
         \@lines, $tempdir, $PREFIX, $VERSION, $file_ts, $file_idx, $SUFFIX,
     );

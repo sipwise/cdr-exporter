@@ -18,10 +18,10 @@ sub sftp {
         die "+++ failed to transfer $src to $user\@$host:$port/$dir: " . $sftp->error . "\n";
     }
 
-    my $dst = $dir . "/" . basename($src);
-
-    print "### transferring $src to $user\@$host:$port at $dst\n";
-    $sftp->put($src, $dst);
+    my $fname = basename($src);
+    print "### transferring $src to $user\@$host:$port at $dir/$fname\n";
+    $sftp->setcwd($dir);
+    $sftp->put($src, $fname);
 }
 
 1;
