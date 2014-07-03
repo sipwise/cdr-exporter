@@ -31,11 +31,11 @@ sub set_mark {
 }
 
 sub update_export_status{
-    my ($dbh, $tbl, $ids) = @_;
+    my ($dbh, $tbl, $ids, $status) = @_;
     return unless(@{ $ids });
-    my $u = $dbh->prepare("update $tbl set export_status='ok', exported_at=now()" .
+    my $u = $dbh->prepare("update $tbl set export_status=?, exported_at=now()" .
       " where id in (" . join (',', map { '?' }(1 .. @{ $ids }) ) . ")");
-    $u->execute(@{ $ids }) or die($dbh->errstr);
+    $u->execute($status, @{ $ids }) or die($dbh->errstr);
 }
 
 
