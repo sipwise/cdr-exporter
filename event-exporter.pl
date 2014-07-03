@@ -16,6 +16,8 @@ our $DBDB;
 our $MAX_ROWS_PER_FILE;
 our $EDRDIR;
 
+our $FILTER_FLAPPING = 0;
+
 our $PREFIX = 'sipwise';
 our $VERSION = '001';
 our $SUFFIX = 'edr';
@@ -109,7 +111,7 @@ foreach my $f(split('\}\s*,\s*{', $EXPORT_CONDITIONS)) {
     push @conditions, { $a => { $c => $d } };
 }
 
-my $dbh = DBI->connect('DBI:mysql:accounting', 'export', 'export')
+my $dbh = DBI->connect('DBI:mysql:'.$DBDB, $DBUSER, $DBPASS)
     or die "failed to connect to db: $DBI::errstr";
 $dbh->{mysql_auto_reconnect} = 1;
 $dbh->{AutoCommit} = 0;
@@ -162,8 +164,17 @@ my ($rec_idx, $file_idx) = (0, $mark->{lastseq});
 my @lines = ();
 my @ids = ();
 my $rows = $sth->fetchall_arrayref();
+my %filter = ();
 while(my $row = shift @{ $rows }) {
     my @fields = map { defined $_ ? "\"$_\"" : '""' } @{ $row };
+
+
+    if($FILTER_FLAPPING) {
+        # TODO: how to figure out with our dynamic query which subscriber
+        # did which action and whether the old/new status is ok?
+    }
+
+
     my $line = join ",", @fields;
     push @lines, $line;
 
