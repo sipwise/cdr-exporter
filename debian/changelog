@@ -1,3 +1,24 @@
+ngcp-cdr-exporter (1.10.1.0+0~mr3.4.1.0) unstable; urgency=low
+
+  [ Andreas Granig ]
+  * [7a8909a] MT#7793 Export EDR files from accounting.events
+  * [df8efc0] MT#7793 Properly handle cdr path /tmp
+  * [c9f3b91] MT#7793 Fix cases where sub only has one number
+  * [8493270] MT#7793 Export profile name instead of id.
+  * [3914348] MT#7793 Pull config from config file.
+  * [5bd59d6] MT#7793 Include event exporter in deb
+  * [e2617f9] MT#7793 Install NGCP too. WIP - needs debian-style
+  * [38b448c] MT#7793 Implement remote transfer of edr
+  * [dede331] MT#7793 Fix mysql connect to use config params
+  * [d524b74] MT#7793 Fix dependecy and file index handling.
+  * [0da0035] MT#7793 Add flapping filter.
+  * [c8c5762] MT#7793 Improve flapping filter.
+  * [ed28400] MT#8035 Use billing.subscriber_id for events
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 10 Jul 2014 15:17:13 +0200
+
 ngcp-cdr-exporter (1.10.0.0+0~mr3.4.0.0) unstable; urgency=low
 
   [ Michael Prokop ]
