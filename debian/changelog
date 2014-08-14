@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.10.1.2+0~mr3.4.1.2) unstable; urgency=low
+
+  [ Andreas Granig ]
+  * [a6c976f] MT#8523 Use alias number for edr export.
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 14 Aug 2014 18:57:56 +0200
+
 ngcp-cdr-exporter (1.10.1.1+0~mr3.4.1.1) unstable; urgency=low
 
   * New release.
