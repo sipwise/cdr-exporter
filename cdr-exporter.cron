@@ -1,2 +1,1 @@
-25 * * * *   root    /usr/sbin/cdr-exporter >/dev/null
-55 * * * *   root    /usr/sbin/cdr-exporter >/dev/null
+25,55 * * * *   root    if /usr/sbin/ngcp-check_active -q; then /usr/sbin/cdr-exporter >/dev/null; fi
