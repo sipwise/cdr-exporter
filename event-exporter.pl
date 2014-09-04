@@ -61,7 +61,7 @@ foreach my $cp(@config_paths) {
 die "Config file $cf not found in path " . (join " or ", @config_paths) . "\n"
     unless $config_file;
 
-open my $CONFIG, "$config_file" or die "Couldn't open the configuration file '$config_file'.\n";
+open my $CONFIG, '<', "$config_file" or die "Couldn't open the configuration file '$config_file'.\n";
 
 while (<$CONFIG>) {
     chomp;                  # no newline
@@ -244,7 +244,7 @@ foreach my $file(readdir($fh)) {
     if(-f $src) {
         DEBUG "### moving $src to $dst\n";
         copy($src, $dst);
-        NGCP::CDR::Export::chownmod($dst, $FILES_OWNER, $FILES_GROUP, 0666, $FILES_MASK);
+        NGCP::CDR::Export::chownmod($dst, $FILES_OWNER, $FILES_GROUP, '0666', $FILES_MASK);
         if($TRANSFER_TYPE eq "sftp") {
             NGCP::CDR::Transfer::sftp(
                 $dst, $TRANSFER_HOST, $TRANSFER_PORT, 
