@@ -1,1 +1,1 @@
-25,55 * * * *   root    if /usr/sbin/ngcp-check_active -q; then /usr/sbin/cdr-exporter >/dev/null; fi
+25,55 * * * *   root    . /etc/default/ngcp-roles; if /usr/sbin/ngcp-check_active -q && NGCP_IS_MGMT ; then /usr/sbin/cdr-exporter >/dev/null; fi
