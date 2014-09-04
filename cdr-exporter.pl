@@ -25,9 +25,9 @@ our $FILES_MASK = '022';
 
 
 my $config_file = "/etc/ngcp-cdr-exporter/cdr-exporter.conf";
-open CONFIG, "$config_file" or die "Program stopping, couldn't open the configuration file '$config_file'.\n";
+open my $CONFIG, '<', "$config_file" or die "Program stopping, couldn't open the configuration file '$config_file'.\n";
 
-while (<CONFIG>) {
+while (<$CONFIG>) {
     chomp;                  # no newline
     s/#.*//;                # no comments
     s/^\s+//;               # no leading white
@@ -37,7 +37,7 @@ while (<CONFIG>) {
         no strict 'refs';
         $$var = $value;
 }
-close CONFIG;
+close $CONFIG;
 
 
 
@@ -282,7 +282,7 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 			for my $dd (@dirlist) {
 				if (! -d $dd) {
 					mkdir($dd) or die("failed to create target directory $dd ($!), stop");
-					chownmod($dd, $FILES_OWNER, $FILES_GROUP, 0777, $FILES_MASK);
+					chownmod($dd, $FILES_OWNER, $FILES_GROUP, '0777', $FILES_MASK);
 				}
 			}
 			my $fn = sprintf('%s/%s_%s_%s_%010i.cdr', $dircomp, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
@@ -306,7 +306,7 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 
 			rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop");
 			print("### successfully moved $tfn to $fn\n");
-			chownmod($fn, $FILES_OWNER, $FILES_GROUP, 0666, $FILES_MASK);
+			chownmod($fn, $FILES_OWNER, $FILES_GROUP, '0666', $FILES_MASK);
 		}
 
 		# update exported cdrs
