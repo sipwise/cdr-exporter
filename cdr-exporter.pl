@@ -3,44 +3,21 @@
 
 use strict;
 use warnings;
+use Config::Simple;
 use DBI;
 use Digest::MD5;
 
-our $DBHOST;
-our $DBUSER;
-our $DBPASS;
-our $DBDB;
-our $CDRDIR;
-our $PREFIX;
-our $VERSION;
-our $DAILY_DIR;
-our $MONTHLY_DIR;
-our $FULL_NAMES;
-our $EXPORT_UNRATED;
-our $EXPORT_INCOMING;
-our $EXPORT_FAILED;
-our $FILES_OWNER = 'cdrexport';
-our $FILES_GROUP = 'cdrexport';
-our $FILES_MASK = '022';
+# default config values
+my $config = {
+	FILES_OWNER => 'cdrexport',
+	FILES_GROUP => 'cdrexport',
+	FILES_MASK => '022'
+};
 
 
 my $config_file = "/etc/ngcp-cdr-exporter/cdr-exporter.conf";
-open my $CONFIG, '<', "$config_file" or die "Program stopping, couldn't open the configuration file '$config_file'.\n";
-
-while (<$CONFIG>) {
-    chomp;                  # no newline
-    s/#.*//;                # no comments
-    s/^\s+//;               # no leading white
-    s/\s+$//;               # no trailing white
-    next unless length;     # anything left?
-    my ($var, $value) = split(/\s*=\s*/, $_, 2);
-        no strict 'refs';
-        $$var = $value;
-}
-close $CONFIG;
-
-
-
+Config::Simple->import_from("$config_file" , \%{$config}) or
+	die "Program stopping, couldn't open the configuration file '$config_file'.\n";
 
 
 sub chownmod {
@@ -58,10 +35,12 @@ sub chownmod {
 
 
 
-my $DBH = DBI->connect("dbi:mysql:$DBDB;host=$DBHOST", $DBUSER, $DBPASS);
+my $DBH = DBI->connect("dbi:mysql:".$config->{DBDB}.";host=".$config->{DBHOST},
+	$config->{DBUSER}, $config->{DBPASS});
 
 $DBH or return 0;
-print("+++ Start run with DB " . ($DBUSER || "(undef)") . "\@$DBDB to $PREFIX\n");
+print("+++ Start run with DB " . ($config->{DBUSER} || "(undef)") .
+	"\@".$config->{DBDB}." to ".$config->{PREFIX}."\n");
 
 my $COLLID = "exporter";
 my %MARKS;	# last seq etc
@@ -133,23 +112,26 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 {
 	my ($dir1, $dir2, $ts);
 	$ts = sprintf('%04i%02i%02i%02i%02i%02i', $NOW[5] + 1900, $NOW[4] + 1, @NOW[3,2,1,0]);
-	$FULL_NAMES = ($FULL_NAMES && $FULL_NAMES =~ /1|y/i);
+	$config->{FULL_NAMES} = ($config->{FULL_NAMES} &&
+		$config->{FULL_NAMES} =~ /1|y/i);
 
-	if ($MONTHLY_DIR && $MONTHLY_DIR =~ /1|y/i) {
+	if ($config->{MONTHLY_DIR} && $config->{MONTHLY_DIR} =~ /1|y/i) {
 		$dir1 = sprintf('%04i%02i', $NOW[5] + 1900, $NOW[4] + 1);
-		if ($DAILY_DIR && $DAILY_DIR =~ /1|y/i) {
+		if ($config->{DAILY_DIR} && $config->{DAILY_DIR} =~ /1|y/i) {
 			$dir2 = sprintf('%02i', $NOW[3]);
-			$FULL_NAMES or $ts = sprintf('%02i%02i%02i', @NOW[2,1,0]);
+			$config->{FULL_NAMES} or
+				$ts = sprintf('%02i%02i%02i', @NOW[2,1,0]);
 		}
 		else {
 			$dir2 = '.';
-			$FULL_NAMES or $ts = sprintf('%02i%02i%02i%02i', @NOW[3,2,1,0]);
+			$config->{FULL_NAMES} or
+				$ts = sprintf('%02i%02i%02i%02i', @NOW[3,2,1,0]);
 		}
 	}
-	elsif ($DAILY_DIR && $DAILY_DIR =~ /1|y/i) {
+	elsif ($config->{DAILY_DIR} && $config->{DAILY_DIR} =~ /1|y/i) {
 		$dir1 = sprintf('%04i%02i%02i', $NOW[5] + 1900, $NOW[4] + 1, $NOW[3]);
 		$dir2 = '.';
-		$FULL_NAMES or $ts = sprintf('%02i%02i%02i', @NOW[2,1,0]);
+		$config->{FULL_NAMES} or $ts = sprintf('%02i%02i%02i', @NOW[2,1,0]);
 	}
 	else {
 		$dir1 = $dir2 = '.';
@@ -201,8 +183,8 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 				LEFT JOIN billing.voip_subscribers source_bvs ON cdr.source_user_id = source_bvs.uuid
 				LEFT JOIN billing.voip_subscribers destination_bvs ON cdr.destination_user_id = destination_bvs.uuid
 			where	cdr.export_status = 'unexported' AND cdr.id > ?
-		". ($EXPORT_INCOMING eq 'yes' ? '' : "and source_user_id != '0'") ."
-		". ($EXPORT_FAILED eq 'yes' ? '' : "and call_status = 'ok'") ."
+		". ($config->{EXPORT_INCOMING} eq 'yes' ? '' : "and source_user_id != '0'") ."
+		". ($config->{EXPORT_FAILED} eq 'yes' ? '' : "and call_status = 'ok'") ."
 			order by
 				cdr.id
 			limit	$limit
@@ -214,7 +196,7 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 		while (my $r = $s->fetchrow_hashref()) {
 			# finish export to give rate-o-mat time to catch up
 			if ($r->{rating_status} eq 'unrated') {
-				last if $EXPORT_UNRATED !~ /y|1|true/i;
+				last if $config->{EXPORT_UNRATED} !~ /y|1|true/i;
 			}
 			else {
 				unless(defined $r->{source_carrier_zone}) { # platform internal, no peering cost calculated
@@ -270,9 +252,9 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 			my ($f, @dirs) = @$ref;
 
 			my $num = scalar(@$f);
-			unshift(@$f, sprintf('%s,%04i', $VERSION, $num));
+			unshift(@$f, sprintf('%s,%04i', $config->{VERSION}, $num));
 
-			my $dircomp = $CDRDIR;
+			my $dircomp = $config->{CDRDIR};
 			my @dirlist;
 			for my $dirpart (@dirs, $dir1, $dir2) {
 				$dircomp .= "/$dirpart";
@@ -282,11 +264,14 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 			for my $dd (@dirlist) {
 				if (! -d $dd) {
 					mkdir($dd) or die("failed to create target directory $dd ($!), stop");
-					chownmod($dd, $FILES_OWNER, $FILES_GROUP, '0777', $FILES_MASK);
+					chownmod($dd, $config->{FILES_OWNER},
+						$config->{FILES_GROUP},	'0777', $config->{FILES_MASK});
 				}
 			}
-			my $fn = sprintf('%s/%s_%s_%s_%010i.cdr', $dircomp, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
-			my $tfn = sprintf('%s/%s_%s_%s_%010i.cdr.'.$$, $dircomp, $PREFIX, $VERSION, $ts, $MARKS{lastseq});
+			my $fn = sprintf('%s/%s_%s_%s_%010i.cdr', $dircomp,
+				$config->{PREFIX}, $config->{VERSION}, $ts, $MARKS{lastseq});
+			my $tfn = sprintf('%s/%s_%s_%s_%010i.cdr.'.$$, $dircomp,
+				$config->{PREFIX}, $config->{VERSION}, $ts, $MARKS{lastseq});
 			my $fd;
 			open($fd, ">", $tfn) or die("failed to open tmp-file $tfn ($!), stop");
 			my $ctx = Digest::MD5->new;
@@ -306,7 +291,8 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 
 			rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop");
 			print("### successfully moved $tfn to $fn\n");
-			chownmod($fn, $FILES_OWNER, $FILES_GROUP, '0666', $FILES_MASK);
+			chownmod($fn, $config->{FILES_OWNER}, $config->{FILES_GROUP},
+				'0666', $config->{FILES_MASK});
 		}
 
 		# update exported cdrs
