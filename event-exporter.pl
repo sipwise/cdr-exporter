@@ -2,43 +2,29 @@
 use strict;
 use v5.14;
 
+use Config::Simple;
 use DBI;
 use File::Temp;
 use File::Copy;
 use NGCP::CDR::Export;
 use NGCP::CDR::Transfer;
 
-our $DBHOST;
-our $DBUSER;
-our $DBPASS;
-our $DBDB;
-
-our $MAX_ROWS_PER_FILE;
-our $EDRDIR;
-
-our $FILTER_FLAPPING = 0;
-
-our $PREFIX = 'sipwise';
-our $VERSION = '001';
-our $SUFFIX = 'edr';
-our $FILES_OWNER = 'cdrexport';
-our $FILES_GROUP = 'cdrexport';
-our $FILES_MASK = '022';
-
-our $TRANSFER_TYPE = "none";
-our $TRANSFER_HOST;
-our $TRANSFER_PORT = 22;
-our $TRANSFER_USER = "cdrexport";
-our $TRANSFER_PASS;
-our $TRANSFER_REMOTE = "/home/jail/home/cdrexport";
-
-our $EXPORT_FIELDS;
-our $EXPORT_JOINS;
-our $EXPORT_CONDITIONS;
-
 my $collid = "eventexporter";
 my $debug = 0;
-
+# default config values
+my $config = {
+    FILTER_FLAPPING => 0,
+    PREFIX => 'sipwise',
+    VERSION => '001',
+    SUFFIX => 'edr',
+    FILES_OWNER => 'cdrexport',
+    FILES_GROUP => 'cdrexport',
+    FILES_MASK => '022',
+    TRANSFER_TYPE => "none",
+    TRANSFER_PORT => 22,
+    TRANSFER_USER => "cdrexport",
+    TRANSFER_REMOTE => "/home/jail/home/cdrexport"
+};
 
 sub DEBUG {
     say join (' ', @_);
@@ -61,32 +47,21 @@ foreach my $cp(@config_paths) {
 die "Config file $cf not found in path " . (join " or ", @config_paths) . "\n"
     unless $config_file;
 
-open my $CONFIG, '<', "$config_file" or die "Couldn't open the configuration file '$config_file'.\n";
+Config::Simple->import_from("$config_file" , \%config) or
+    die "Couldn't open the configuration file '$config_file'.\n";
 
-while (<$CONFIG>) {
-    chomp;                  # no newline
-    s/^\s+//;               # no leading white
-    s/^#.*//;                # no comments
-    s/\s+$//;               # no trailing white
-    next unless length;     # anything left?
-    my ($var, $value) = split(/\s*=\s*/, $_, 2);
-        no strict 'refs';
-        $$var = $value;
-}
-close $CONFIG;
-
-die "Invalid destination directory '$EDRDIR'\n"
-    unless(-d $EDRDIR);
+die "Invalid destination directory '".$config->{EDRDIR}."'\n"
+    unless(-d $config->{EDRDIR});
 
 
 my @fields = ();
-foreach my $f(split('\'\s*,\s*\#?\s*\'', $EXPORT_FIELDS)) {
+foreach my $f(split('\'\s*,\s*\#?\s*\'', $config->{EXPORT_FIELDS})) {
     $f =~ s/^\'//; $f =~ s/\'$//;
     push @fields, $f;
 }
 
 my @joins = ();
-foreach my $f(split('\}\s*,\s*{', $EXPORT_JOINS)) {
+foreach my $f(split('\}\s*,\s*{', $config->{EXPORT_JOINS})) {
     $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
     my ($a, $b) = split('\s*=>\s*{\s*', $f);
     $a =~ s/^\s*\'//; $a =~ s/\'$//g;
@@ -99,7 +74,7 @@ foreach my $f(split('\}\s*,\s*{', $EXPORT_JOINS)) {
 }
 
 my @conditions = ();
-foreach my $f(split('\}\s*,\s*{', $EXPORT_CONDITIONS)) {
+foreach my $f(split('\}\s*,\s*{', $config->{EXPORT_CONDITIONS})) {
     $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
     my ($a, $b) = split('\s*=>\s*{\s*', $f);
     $a =~ s/^\s*\'//; $a =~ s/\'$//g;
@@ -111,7 +86,8 @@ foreach my $f(split('\}\s*,\s*{', $EXPORT_CONDITIONS)) {
     push @conditions, { $a => { $c => $d } };
 }
 
-my $dbh = DBI->connect('DBI:mysql:'.$DBDB, $DBUSER, $DBPASS)
+my $dbh = DBI->connect('DBI:mysql:'.$config->{DBDB},
+    $config->{DBUSER}, $config->{DBPASS})
     or die "failed to connect to db: $DBI::errstr";
 $dbh->{mysql_auto_reconnect} = 1;
 $dbh->{AutoCommit} = 0;
@@ -174,7 +150,7 @@ while(my $row = shift @{ $rows }) {
     my ($id, $sub_id, $type, $old, $new) = @head;
     my @fields = map { defined $_ ? "\"$_\"" : '""' } (@{ $row }[5 .. @{ $row }-1]);
 
-    if($FILTER_FLAPPING) {
+    if($config->{FILTER_FLAPPING}) {
         if($type =~ /^start_(.+)$/) {
             my $t = $1;
             my $k = "$sub_id;$t;$new";
@@ -217,7 +193,7 @@ while(my $row = shift @{ $rows }) {
 
 my @vals = map { $lines{$_} } sort { int($a) <=> int($b) } keys %lines;
 my @ids = keys %lines;
-my $max = $MAX_ROWS_PER_FILE // $rec_idx;
+my $max = $config->{MAX_ROWS_PER_FILE} // $rec_idx;
 do {
     my $recs = ($rec_idx > $max) ? $max : $rec_idx;
 
@@ -225,7 +201,8 @@ do {
     my @filevals = @vals[0 .. $recs-1];
     @vals = @vals[$recs .. @vals-1];
     NGCP::CDR::Export::write_file(
-        \@filevals, $tempdir, $PREFIX, $VERSION, $file_ts, $file_idx, $SUFFIX,
+        \@filevals, $tempdir, $config->{PREFIX},
+        $config->{VERSION}, $file_ts, $file_idx, $config->{SUFFIX},
     );
     $rec_idx -= $recs;
 
@@ -240,15 +217,17 @@ $dbh->commit or die("failed to commit db changes: " . $dbh->errstr);
 opendir(my $fh, $tempdir);
 foreach my $file(readdir($fh)) {
     my $src = "$tempdir/$file";
-    my $dst = "$EDRDIR/$file";
+    my $dst = $config->{EDRDIR}."/$file";
     if(-f $src) {
         DEBUG "### moving $src to $dst\n";
         copy($src, $dst);
-        NGCP::CDR::Export::chownmod($dst, $FILES_OWNER, $FILES_GROUP, '0666', $FILES_MASK);
-        if($TRANSFER_TYPE eq "sftp") {
+        NGCP::CDR::Export::chownmod($dst, $config->{FILES_OWNER},
+            $config->{FILES_GROUP}, '0666', $config->{FILES_MASK});
+        if($config->{TRANSFER_TYPE} eq "sftp") {
             NGCP::CDR::Transfer::sftp(
-                $dst, $TRANSFER_HOST, $TRANSFER_PORT, 
-                $TRANSFER_REMOTE, $TRANSFER_USER, $TRANSFER_PASS,
+                $dst, $config->{TRANSFER_HOST}, $config->{TRANSFER_PORT},
+                $config->{TRANSFER_REMOTE}, $config->{TRANSFER_USER},
+                $config->{TRANSFER_PASS},
             );
         }
 
