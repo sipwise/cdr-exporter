@@ -224,7 +224,7 @@ foreach my $file(readdir($fh)) {
         DEBUG "### moving $src to $dst\n";
         copy($src, $dst);
         NGCP::CDR::Export::chownmod($dst, $config->{'default.FILES_OWNER'},
-            $config->{'default.FILES_GROUP'}, '0666',
+            $config->{'default.FILES_GROUP'}, oct(666),
             $config->{'default.FILES_MASK'});
         if($config->{'default.TRANSFER_TYPE'} eq "sftp") {
             NGCP::CDR::Transfer::sftp(
