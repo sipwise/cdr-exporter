@@ -273,7 +273,8 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 				if (! -d $dd) {
 					mkdir($dd) or die("failed to create target directory $dd ($!), stop");
 					chownmod($dd, $config->{'default.FILES_OWNER'},
-						$config->{'default.FILES_GROUP'},	'0777', $config->{'default.FILES_MASK'});
+						$config->{'default.FILES_GROUP'},
+						oct(777), $config->{'default.FILES_MASK'});
 				}
 			}
 			my $fn = sprintf('%s/%s_%s_%s_%010i.cdr', $dircomp,
@@ -303,7 +304,7 @@ my @CDR_RESELLER_BODY_FIELDS = qw(
 			print("### successfully moved $tfn to $fn\n");
 			chownmod($fn, $config->{'default.FILES_OWNER'},
 				$config->{'default.FILES_GROUP'},
-				'0666', $config->{'default.FILES_MASK'});
+				oct(666), $config->{'default.FILES_MASK'});
 		}
 
 		# update exported cdrs
