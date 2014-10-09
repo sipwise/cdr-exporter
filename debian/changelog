@@ -1,3 +1,22 @@
+ngcp-cdr-exporter (1.11.1.0+0~mr3.5.1.0) unstable; urgency=low
+
+  [ Andreas Granig ]
+  * [147817e] MT#8523 Use alias number for edr export.
+
+  [ Victor Seva ]
+  * [cdb1ad0] MT#8741 update cron
+  * [9ab6e1d] MT#7505 Add .gitreview file
+  * [5bcdc98] MT#8125 run cron only on MGMT node
+  * [2c31646] MT#8969 fix perl warnings:
+  * [f8a5e3a] MT#8969 Use Config::Simple to manage configs
+
+  [ Andrew Pogrebennyk ]
+  * [edfaf05] MT#8969 fix file permissions
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 09 Oct 2014 16:17:35 +0200
+
 ngcp-cdr-exporter (1.11.0.0+0~mr3.5.0.0) unstable; urgency=low
 
   [ Andreas Granig ]
