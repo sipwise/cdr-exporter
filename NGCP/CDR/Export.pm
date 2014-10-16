@@ -3,13 +3,19 @@ package NGCP::CDR::Export;
 use Digest::MD5;
 
 sub get_mark {
-    my ($dbh, $name) = @_;
+    my ($dbh, $name, $resellers) = @_;
     my %marks = ();
+    $resellers = [] unless defined($resellers);
     my $s = $dbh->prepare("select acc_id from accounting.mark where collector = ?");
-    for my $mk (qw(lastid lastseq)) {
-            $s->execute("$name-$mk") or die($dbh->errstr);
-            my $r = $s->fetch;
-            $marks{$mk} = ($r && $r->[0]) ? $r->[0] : 0;
+    my @ids = qw/lastid lastseq/;
+    foreach my $id(@{ $resellers }) {
+        push @ids, "lastseq-$id";
+    }
+    for my $mk(@ids) {
+        print "getting mark $name-$mk\n"; 
+        $s->execute("$name-$mk") or die($dbh->errstr);
+        my $r = $s->fetch;
+        $marks{$mk} = ($r && $r->[0]) ? $r->[0] : 0;
     }
     return \%marks;
 }
@@ -38,6 +44,37 @@ sub update_export_status{
     $u->execute($status, @{ $ids }) or die($dbh->errstr);
 }
 
+sub get_reseller_name {
+    my ($dbh, $cid) = @_;
+    my $q = $dbh->prepare('select name from billing.resellers where contract_id = ?');
+    $q->execute($cid);
+    my $rname;
+    ($rname) = $q->fetchrow_array;
+    if (!$rname) {
+        $rname = '';
+    }
+    $rname =~ s,/,_,gs;
+    $rname =~ s,\0,,gs;
+    return $rname;
+}
+
+sub get_missing_resellers {
+    my ($dbh, $cids) = @_;
+    my $qs = 'select br.name, bc.id from billing.resellers br left join billing.contracts bc on br.contract_id = bc.id';
+    if(@{ $cids }) {
+        $qs .= ' where bc.id not in (' . join (',', map { '?' }(1 .. @{ $cids }) ) . ")";
+    }
+    my $q = $dbh->prepare($qs);
+    $q->execute(@{ $cids });
+    my @names = ();
+    my @ids = ();
+    while(my $res = $q->fetchrow_arrayref) {
+        push @names, $res->[0];
+        push @ids, $res->[1];
+    }
+    return { names => \@names, ids => \@ids };
+}
+
 
 sub get_ts_for_filename {
     my $now = time;
@@ -60,8 +97,9 @@ sub chownmod {
 
 sub write_file {
     my (
-        $lines, $dircomp, $prefix, $version, $ts, $lastseq, $suffix, 
+        $lines, $dircomp, $prefix, $version, $ts, $lastseq, $suffix,
     ) = @_;
+
     my $fn =  sprintf('%s/%s_%s_%s_%010i.%s', $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
     my $tfn = sprintf('%s/%s_%s_%s_%010i.%s.'.$$, $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
     my $fd;
