@@ -128,8 +128,6 @@ foreach my $f(@trailer) {
 print("+++ Start run with DB " . ($config->{'default.DBUSER'} || "(undef)") .
 	"\@".$config->{'default.DBDB'}." to ".$config->{'default.PREFIX'}."\n");
 
-my $file_ts = NGCP::CDR::Export::get_ts_for_filename;
-
 # extract positions of reseller fields from admin fields
 my @reseller_positions = ();
 my %reseller_index;
@@ -218,16 +216,22 @@ while(my $row = $sth->fetchrow_arrayref) {
 
 #DEBUG "ignoring cdr ids " . (join ",", @ignored_ids);
 
+my $full_name = (defined $config->{'default.FULL_NAMES'} && $config->{'default.NAMES'} eq "yes" ? 1 : 0);
 my $monthly_dir = (defined $config->{'default.MONTHLY_DIR'} && $config->{'default.MONTHLY_DIR'} eq "yes" ? 1 : 0); 
 my $daily_dir = (defined $config->{'default.DAILY_DIR'} && $config->{'default.DAILY_DIR'} eq "yes" ? 1 : 0);
+my $file_ts = NGCP::CDR::Export::get_ts_for_filename;
 my $dname = "";
 if($monthly_dir && !$daily_dir) {
-   $dname .= sprintf("%04i%02i", $now[5] + 1900, $now[4] + 1);
+    $dname .= sprintf("%04i%02i", $now[5] + 1900, $now[4] + 1);
+    $full_name or $file_ts = sprintf("%02i%02i%02i%02i", @now[3,2,1,0]);
 } elsif(!$monthly_dir && $daily_dir) {
-   $dname .= sprintf("%04i%02i%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
+    $dname .= sprintf("%04i%02i%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
+    $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
 } elsif($monthly_dir && $daily_dir) {
-   $dname .= sprintf("%04i%02i/%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
+    $dname .= sprintf("%04i%02i/%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
+    $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
 } 
+
 
 my @ids = keys %{ $reseller_lines->{'system'} };
 my @resellers = keys $reseller_lines;
