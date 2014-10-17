@@ -265,11 +265,13 @@ sub write_wrap {
     ($force == 0 && $rec_idx < $max) and return;
     ($force == 1 && $rec_idx == 0) and return;
     my $reseller_contract_id = "";
+    my $mark_query = undef;
     unless($reseller eq "system") {
         $reseller_contract_id = "-".$reseller_ids->{$reseller};
+	$mark_query = [ $reseller_ids->{$reseller} ];
     }
     if (!defined($mark{"lastseq".$reseller_contract_id})) {
-        my $tmpmark = NGCP::CDR::Export::get_mark($dbh, $collid, [ $reseller ]);
+        my $tmpmark = NGCP::CDR::Export::get_mark($dbh, $collid, $mark_query);
 	%mark = ( %mark, %$tmpmark );
         $mark{"lastseq".$reseller_contract_id} //= 0;
     }
