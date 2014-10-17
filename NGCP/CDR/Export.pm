@@ -12,7 +12,6 @@ sub get_mark {
         push @ids, "lastseq-$id";
     }
     for my $mk(@ids) {
-        print "getting mark $name-$mk\n"; 
         $s->execute("$name-$mk") or die($dbh->errstr);
         my $r = $s->fetch;
         $marks{$mk} = ($r && $r->[0]) ? $r->[0] : 0;
