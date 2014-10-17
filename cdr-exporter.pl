@@ -130,6 +130,20 @@ print("+++ Start run with DB " . ($config->{'default.DBUSER'} || "(undef)") .
 
 my $file_ts = NGCP::CDR::Export::get_ts_for_filename;
 
+# extract positions of reseller fields from admin fields
+my @reseller_positions = ();
+my %reseller_index;
+@reseller_index{@admin_fields} = (0..$#admin_fields);
+for(my $i = 0; $i < @reseller_fields; $i++) {
+    my $name = $reseller_fields[$i];
+    unless(exists $reseller_index{$name}) {
+        die "Invalid RESELLER_EXPORT_FIELDS element '$name', not available in ADMIN_EXPORT_FIELDS!";
+    }
+    push @reseller_positions, $reseller_index{$name};
+}
+
+
+
 # add fields we definitely need, will be removed during processing
 unshift @admin_fields, qw/
     accounting.cdr.id
@@ -163,12 +177,13 @@ my $reseller_lines = {};
 while(my $row = $sth->fetchrow_arrayref) {
     # agranig: no quoting of fields
     # my @fields = map { defined $_ ? "\"$_\"" : '""' } (@{ $row });
-    my @fields = map { defined $_ ? $_ : '' } (@{ $row });
+    my @fields = @{ $row };
     my $id = shift @fields;
     my $src_uuid = shift @fields;
     my $dst_uuid = shift @fields;
     my $src_provid = shift @fields;
     my $dst_provid = shift @fields;
+    @fields = map { defined $_ ? "'$_'" : "''" } (@fields);
 
     if($config->{'default.EXPORT_INCOMING'} eq "no" && $src_uuid eq "0") {
         push @ignored_ids, $id;
@@ -178,12 +193,15 @@ while(my $row = $sth->fetchrow_arrayref) {
     my $line = join ",", @fields;
     $reseller_lines->{'system'}->{$id} = $line;
 
+    my @reseller_fields = @fields[@reseller_positions];
+    my $reseller_line = join ",", @reseller_fields;
+
     if($src_uuid ne "0") {
         if(!exists $reseller_names->{$src_provid}) {
             $reseller_names->{$src_provid} = NGCP::CDR::Export::get_reseller_name($dbh, $src_provid);
             $reseller_ids->{$reseller_names->{$src_provid}} = $src_provid;
         }
-        $reseller_lines->{$reseller_names->{$src_provid}}->{$id} = $line;
+        $reseller_lines->{$reseller_names->{$src_provid}}->{$id} = $reseller_line;
     }
     if($dst_uuid ne "0") {
         if($config->{'default.EXPORT_INCOMING'} eq "no" && $src_provid ne $dst_provid) {
@@ -193,7 +211,7 @@ while(my $row = $sth->fetchrow_arrayref) {
                 $reseller_names->{$dst_provid} = NGCP::CDR::Export::get_reseller_name($dbh, $dst_provid);
                 $reseller_ids->{$reseller_names->{$dst_provid}} = $dst_provid;
             }
-            $reseller_lines->{$reseller_names->{$dst_provid}}->{$id} = $line;
+            $reseller_lines->{$reseller_names->{$dst_provid}}->{$id} = $reseller_line;
         }
     }
 }
