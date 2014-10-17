@@ -172,6 +172,24 @@ my @ignored_ids = ();
 my $reseller_names = {};
 my $reseller_ids = {};
 my $reseller_lines = {};
+my @ids;
+my %mark;
+
+my $full_name = (defined $config->{'default.FULL_NAMES'} && $config->{'default.NAMES'} eq "yes" ? 1 : 0);
+my $monthly_dir = (defined $config->{'default.MONTHLY_DIR'} && $config->{'default.MONTHLY_DIR'} eq "yes" ? 1 : 0);
+my $daily_dir = (defined $config->{'default.DAILY_DIR'} && $config->{'default.DAILY_DIR'} eq "yes" ? 1 : 0);
+my $dname = "";
+if($monthly_dir && !$daily_dir) {
+    $dname .= sprintf("%04i%02i", $now[5] + 1900, $now[4] + 1);
+    $full_name or $file_ts = sprintf("%02i%02i%02i%02i", @now[3,2,1,0]);
+} elsif(!$monthly_dir && $daily_dir) {
+    $dname .= sprintf("%04i%02i%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
+    $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
+} elsif($monthly_dir && $daily_dir) {
+    $dname .= sprintf("%04i%02i/%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
+    $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
+}
+
 
 while(my $row = $sth->fetchrow_arrayref) {
     my @fields = @{ $row };
@@ -188,7 +206,9 @@ while(my $row = $sth->fetchrow_arrayref) {
     }
 
     my $line = join ",", @fields;
-    $reseller_lines->{'system'}->{$id} = $line;
+    push(@{$reseller_lines->{'system'}}, $line);
+    write_wrap('system');
+    push(@ids, $id);
 
     my @reseller_fields = @fields[@reseller_positions];
     my $reseller_line = join ",", @reseller_fields;
@@ -198,7 +218,8 @@ while(my $row = $sth->fetchrow_arrayref) {
             $reseller_names->{$src_provid} = NGCP::CDR::Export::get_reseller_name($dbh, $src_provid);
             $reseller_ids->{$reseller_names->{$src_provid}} = $src_provid;
         }
-        $reseller_lines->{$reseller_names->{$src_provid}}->{$id} = $reseller_line;
+        push(@{$reseller_lines->{$reseller_names->{$src_provid}}}, $reseller_line);
+	write_wrap($reseller_names->{$src_provid});
     }
     if($dst_uuid ne "0") {
         if($config->{'default.EXPORT_INCOMING'} eq "no" && $src_provid ne $dst_provid) {
@@ -208,61 +229,51 @@ while(my $row = $sth->fetchrow_arrayref) {
                 $reseller_names->{$dst_provid} = NGCP::CDR::Export::get_reseller_name($dbh, $dst_provid);
                 $reseller_ids->{$reseller_names->{$dst_provid}} = $dst_provid;
             }
-            $reseller_lines->{$reseller_names->{$dst_provid}}->{$id} = $reseller_line;
+            push(@{$reseller_lines->{$reseller_names->{$dst_provid}}}, $reseller_line);
+	    write_wrap($reseller_names->{$dst_provid});
         }
     }
 }
 
 #DEBUG "ignoring cdr ids " . (join ",", @ignored_ids);
 
-my $full_name = (defined $config->{'default.FULL_NAMES'} && $config->{'default.NAMES'} eq "yes" ? 1 : 0);
-my $monthly_dir = (defined $config->{'default.MONTHLY_DIR'} && $config->{'default.MONTHLY_DIR'} eq "yes" ? 1 : 0); 
-my $daily_dir = (defined $config->{'default.DAILY_DIR'} && $config->{'default.DAILY_DIR'} eq "yes" ? 1 : 0);
-my $dname = "";
-if($monthly_dir && !$daily_dir) {
-    $dname .= sprintf("%04i%02i", $now[5] + 1900, $now[4] + 1);
-    $full_name or $file_ts = sprintf("%02i%02i%02i%02i", @now[3,2,1,0]);
-} elsif(!$monthly_dir && $daily_dir) {
-    $dname .= sprintf("%04i%02i%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
-    $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
-} elsif($monthly_dir && $daily_dir) {
-    $dname .= sprintf("%04i%02i/%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
-    $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
-} 
 
-
-my @ids = keys %{ $reseller_lines->{'system'} };
-my @resellers = keys $reseller_lines;
-# make sure to process system user first:
-@resellers = grep { $_ ne 'system' } @resellers;
-unshift @resellers, 'system';
+my @resellers = keys %$reseller_lines;
+for my $reseller (@resellers) {
+    write_wrap($reseller, 1);
+}
 
 # we write empty cdrs for resellers which didn't have a call during this
 # export run, so get them into the list
-my $missing_resellers = NGCP::CDR::Export::get_missing_resellers($dbh, [ keys $reseller_names ]);
+my $missing_resellers = NGCP::CDR::Export::get_missing_resellers($dbh, [ keys %$reseller_names ]);
 for(my $i = 0; $i < @{ $missing_resellers->{names} }; ++$i) {
     my $name = $missing_resellers->{names}->[$i];
     my $id = $missing_resellers->{ids}->[$i];
     push @resellers, $name;
     $reseller_ids->{$name} = $id;
     $reseller_names->{$id} = $name;
+    write_wrap($name, 2);
 }
 
-my $mark = NGCP::CDR::Export::get_mark($dbh, $collid, [ keys $reseller_names ]);
-foreach my $reseller(@resellers) {
-    $reseller_lines->{$reseller} //= {};
+sub write_wrap {
+    my ($reseller, $force) = @_;
+    $force //= 0;
+    $reseller_lines->{$reseller} //= [];
+    my $vals = $reseller_lines->{$reseller};
+    my $rec_idx = @$vals;
+    my $max = $config->{'default.MAX_ROWS_PER_FILE'} // $rec_idx;
+    ($force == 0 && $rec_idx < $max) and return;
+    ($force == 1 && $rec_idx == 0) and return;
     my $reseller_contract_id = "";
     unless($reseller eq "system") {
         $reseller_contract_id = "-".$reseller_ids->{$reseller};
     }
-    unless($mark->{"lastseq".$reseller_contract_id}) {
-        $mark->{"lastseq".$reseller_contract_id} = 0;
+    if (!defined($mark{"lastseq".$reseller_contract_id})) {
+        my $tmpmark = NGCP::CDR::Export::get_mark($dbh, $collid, [ $reseller ]);
+	%mark = ( %mark, %$tmpmark );
+        $mark{"lastseq".$reseller_contract_id} //= 0;
     }
-    my $file_idx = $mark->{"lastseq".$reseller_contract_id} // 0;
-    my %lines = %{ $reseller_lines->{$reseller} };
-    my @vals = map { $lines{$_} } sort { int($a) <=> int($b) } keys %lines;
-    my $rec_idx = int(@vals);
-    my $max = $config->{'default.MAX_ROWS_PER_FILE'} // $rec_idx;
+    my $file_idx = $mark{"lastseq".$reseller_contract_id} // 0;
     my $reseller_dname = $reseller . "/" . $dname;
     if($reseller ne "system") {
         $reseller_dname = "resellers/$reseller_dname";
@@ -273,8 +284,8 @@ foreach my $reseller(@resellers) {
         my $recs = ($rec_idx > $max) ? $max : $rec_idx;
 
         $file_idx++;
-        my @filevals = @vals[0 .. $recs-1];
-        @vals = @vals[$recs .. @vals-1];
+        my @filevals = @$vals[0 .. $recs-1];
+        @$vals = @$vals[$recs .. @$vals-1]; # modified $reseller_lines
 
         my $err;
         -d $reseller_tempdir || File::Path::make_path($reseller_tempdir, {error => \$err});
@@ -321,6 +332,7 @@ foreach my $reseller(@resellers) {
             }
         }
     }
+    $mark{"lastseq".$reseller_contract_id} = $file_idx;
     NGCP::CDR::Export::set_mark($dbh, $collid, { "lastseq$reseller_contract_id" => $file_idx });
     close($fh);
 }
