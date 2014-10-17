@@ -77,8 +77,16 @@ sub get_missing_resellers {
 
 
 sub get_ts_for_filename {
-    my $now = time;
-    my @now = localtime($now);
+    my ($xnow) = @_;
+    
+    my $now; my @now;
+
+    if(defined $xnow) {
+        @now = @{ $xnow };
+    } else {
+        $now = time;
+        @now = localtime($now);
+    }
     return sprintf('%04i%02i%02i%02i%02i%02i', 
         $now[5] + 1900, $now[4] + 1, @now[3,2,1,0]);
 }

@@ -55,6 +55,7 @@ die "Invalid destination directory '".$config->{'default.CDRDIR'}."'\n"
 
 my $now = time();
 my @now = localtime($now);
+my $file_ts = NGCP::CDR::Export::get_ts_for_filename(\@now);
 
 my @admin_fields = ();
 foreach my $f(@{$config->{'default.ADMIN_EXPORT_FIELDS'}}) {
@@ -173,8 +174,6 @@ my $reseller_ids = {};
 my $reseller_lines = {};
 
 while(my $row = $sth->fetchrow_arrayref) {
-    # agranig: no quoting of fields
-    # my @fields = map { defined $_ ? "\"$_\"" : '""' } (@{ $row });
     my @fields = @{ $row };
     my $id = shift @fields;
     my $src_uuid = shift @fields;
@@ -219,7 +218,6 @@ while(my $row = $sth->fetchrow_arrayref) {
 my $full_name = (defined $config->{'default.FULL_NAMES'} && $config->{'default.NAMES'} eq "yes" ? 1 : 0);
 my $monthly_dir = (defined $config->{'default.MONTHLY_DIR'} && $config->{'default.MONTHLY_DIR'} eq "yes" ? 1 : 0); 
 my $daily_dir = (defined $config->{'default.DAILY_DIR'} && $config->{'default.DAILY_DIR'} eq "yes" ? 1 : 0);
-my $file_ts = NGCP::CDR::Export::get_ts_for_filename;
 my $dname = "";
 if($monthly_dir && !$daily_dir) {
     $dname .= sprintf("%04i%02i", $now[5] + 1900, $now[4] + 1);
