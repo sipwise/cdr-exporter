@@ -175,7 +175,7 @@ my $reseller_lines = {};
 my @ids;
 my %mark;
 
-my $full_name = (defined $config->{'default.FULL_NAMES'} && $config->{'default.NAMES'} eq "yes" ? 1 : 0);
+my $full_name = (defined $config->{'default.FULL_NAMES'} && $config->{'default.FULL_NAMES'} eq "yes" ? 1 : 0);
 my $monthly_dir = (defined $config->{'default.MONTHLY_DIR'} && $config->{'default.MONTHLY_DIR'} eq "yes" ? 1 : 0);
 my $daily_dir = (defined $config->{'default.DAILY_DIR'} && $config->{'default.DAILY_DIR'} eq "yes" ? 1 : 0);
 my $dname = "";
