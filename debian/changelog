@@ -1,3 +1,21 @@
+ngcp-cdr-exporter (1.12.1.0+0~mr3.6.1.0) unstable; urgency=low
+
+  [ Andreas Granig ]
+  * [bcb750d] MT#9637 Initial dynamic fields version. WIP.
+  * [d266163] MT#9637 Extract reseller fields from admin fields
+  * [1a8922c] MT#9637 Add FULL_NAMES for backward compatibility
+  * [8c02426] MT#9637 Use predefined time if passed
+  * [e403ac0] MT#9637 Remove debug output
+  * [63c5524] MT#9637 Fix FULL_NAMES setting.
+
+  [ Richard Fuchs ]
+  * [a9633ef] attempt to write files while fetching cdrs
+  * [421c91d] fix db marks
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 30 Oct 2014 17:11:34 +0100
+
 ngcp-cdr-exporter (1.12.0.0+0~mr3.6.0.0) unstable; urgency=low
 
   [ Andreas Granig ]
