@@ -8,12 +8,14 @@ use File::Temp;
 use File::Copy;
 use NGCP::CDR::Export;
 use NGCP::CDR::Transfer;
+use Data::Dumper;
 
 my $collid = "eventexporter";
 my $debug = 0;
 # default config values
 my $config = {
     'default.FILTER_FLAPPING' => 0,
+    'default.MERGE_UPDATE' => 0,
     'default.PREFIX' => 'sipwise',
     'default.VERSION' => '001',
     'default.SUFFIX' => 'edr',
@@ -147,6 +149,7 @@ my %lines = ();
 my $rows = $sth->fetchall_arrayref();
 my %filter = ();
 my @filter_ids = ();
+
 while(my $row = shift @{ $rows }) {
     my @head = @{ $row }[0 .. 4];
     my ($id, $sub_id, $type, $old, $new) = @head;
@@ -164,6 +167,27 @@ while(my $row = shift @{ $rows }) {
             my $line = join ",", @fields;
             $lines{$id} = $line;
             $rec_idx++;
+        } elsif($config->{'default.MERGE_UPDATE'} && $type =~ /^update_(.+)$/) {
+            my $t = $1;
+            my $k = "$sub_id;$t;$old";
+            my $ids = $filter{$k} // [];
+            if(@{ $ids }) {
+                my $old_id = pop @{ $ids }; 
+                say "... id $id is an update event of id $old_id, merge";
+                delete $lines{$old_id};
+                push @filter_ids, $old_id;
+                my $line = join ",", @fields;
+                $line =~ s/\"update_/\"start_/;
+                $lines{$id} = $line;
+                delete $filter{$k};
+                $k = "$sub_id;$t;$new";
+                push @{ $ids }, ($old_id, $id);
+                $filter{$k} = $ids;
+            } else {
+                my $line = join ",", @fields;
+                $lines{$id} = $line;
+                $rec_idx++;
+            }
         } elsif($type =~ /^end_(.+)$/) {
             my $t = $1;
             my $k = "$sub_id;$t;$old";
