@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.12.1.2+0~mr3.6.1.2) unstable; urgency=low
+
+  [ Andreas Granig ]
+  * [c41411a] MT#7793 fix alias handling and merge updates
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Tue, 11 Nov 2014 13:27:07 +0100
+
 ngcp-cdr-exporter (1.12.1.1+0~mr3.6.1.1) unstable; urgency=low
 
   * New release.
