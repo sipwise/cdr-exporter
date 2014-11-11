@@ -1,3 +1,19 @@
+ngcp-cdr-exporter (1.10.2.2+0~mr3.4.2.2) unstable; urgency=low
+
+  [ Victor Seva ]
+  * [14fe7b1] MT#8969 fix perl warnings:
+  * [650ee39] MT#8969 Use Config::Simple to manage configs
+
+  [ Andrew Pogrebennyk ]
+  * [ca7f706] MT#8969 fix file permissions
+
+  [ Andreas Granig ]
+  * [4b507ce] MT#7793 fix alias handling and merge updates
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Tue, 11 Nov 2014 12:02:19 +0100
+
 ngcp-cdr-exporter (1.10.2.1+0~mr3.4.2.1) unstable; urgency=low
 
   [ Andreas Granig ]
