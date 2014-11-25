@@ -11,7 +11,7 @@ sub sftp_sh {
     my $fname = basename($src);
     print "### transferring $src to $user\@$host:$port at $dir/$fname via sftp-sh\n";
 
-    my $fh = File::Temp->new(UNLINK => 0);
+    my $fh = File::Temp->new(UNLINK => 1);
     print $fh "cd $dir\nput $src $fname";
     my $cmd = "/usr/bin/sftp -b ".$fh->filename." -P $port -i $key $user\@$host";
     print "### using command $cmd\n";
