@@ -1,7 +1,24 @@
 package NGCP::CDR::Transfer;
 
 use File::Basename;
+use File::Temp;
 use Net::SFTP::Foreign;
+use IPC::System::Simple qw/capturex/;
+
+sub sftp_sh {
+    my ($src, $host, $port, $dir, $user, $key) = @_;
+
+    my $fname = basename($src);
+    print "### transferring $src to $user\@$host:$port at $dir/$fname via sftp-sh\n";
+
+    my $fh = File::Temp->new(UNLINK => 0);
+    print $fh "cd $dir\nput $src $fname";
+    my $cmd = "/usr/bin/sftp -b ".$fh->filename." -P $port -i $key $user\@$host";
+    print "### using command $cmd\n";
+
+    capturex([0], split(" ", $cmd));
+}
+
 
 sub sftp {
     my ($src, $host, $port, $dir, $user, $pass) = @_;
