@@ -25,6 +25,7 @@ my $config = {
     'default.TRANSFER_TYPE' => "none",
     'default.TRANSFER_PORT' => 22,
     'default.TRANSFER_USER' => "cdrexport",
+    'default.TRANSFER_KEY' => "/root/.ssh/id_rsa",
     'default.TRANSFER_REMOTE' => "/home/jail/home/cdrexport"
 };
 
@@ -258,9 +259,15 @@ foreach my $file(readdir($fh)) {
                 $config->{'default.TRANSFER_USER'},
                 $config->{'default.TRANSFER_PASS'},
             );
+        } elsif($config->{'default.TRANSFER_TYPE'} eq "sftp-sh") {
+            NGCP::CDR::Transfer::sftp_sh(
+                $dst, $config->{'default.TRANSFER_HOST'},
+                $config->{'default.TRANSFER_PORT'},
+                $config->{'default.TRANSFER_REMOTE'},
+                $config->{'default.TRANSFER_USER'},
+                $config->{'default.TRANSFER_KEY'},
+            );
         }
-
-
     }
 }
 close($fh);
