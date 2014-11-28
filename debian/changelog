@@ -1,3 +1,14 @@
+ngcp-cdr-exporter (1.12.3.0+0~mr3.6.3.0) unstable; urgency=low
+
+  [ Andreas Granig ]
+  * [95a8066] MT#7793 fix alias handling and merge updates
+  * [16f19d3] MT#9637 Use native sftp command option
+  * [bb840e9] MT#9637 Unlink tmpfile after usage.
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Fri, 28 Nov 2014 16:07:49 +0100
+
 ngcp-cdr-exporter (1.12.2.0+0~mr3.6.2.0) unstable; urgency=low
 
   * New release.
