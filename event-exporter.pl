@@ -189,7 +189,7 @@ while(my $row = shift @{ $rows }) {
                 $lines{$id} = $line;
                 $rec_idx++;
             }
-        } elsif($type =~ /^end_(.+)$/) {
+        } elsif($type =~ /^(?:stop|end)_(.+)$/) {
             my $t = $1;
             my $k = "$sub_id;$t;$old";
             my $ids = $filter{$k} // [];
