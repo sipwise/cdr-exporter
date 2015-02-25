@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a288981_48576303",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000002
+      },
+      "writtenOn": "2015-02-25T12:57:23Z",
+      "side": 1,
+      "message": "changes?",
+      "revId": "264cf3d65a5b2ec7c34b762beb66f7b6b363e96c",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a288981_285c1725",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000002
+      },
+      "writtenOn": "2015-02-25T12:57:23Z",
+      "side": 1,
+      "message": "exrescent?? can you please rephrase this?",
+      "revId": "264cf3d65a5b2ec7c34b762beb66f7b6b363e96c",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
