@@ -65,7 +65,12 @@ foreach my $f(@{$config->{'default.EXPORT_FIELDS'}}) {
 }
 
 my @joins = ();
-foreach my $f(@{$config->{'default.EXPORT_JOINS'}}) {
+sub config2array {
+    my $config_key = shift;
+    return ('ARRAY' eq ref $config->{$config_key}) ? $config->{$config_key} : [$config->{$config_key}];
+}
+foreach my $f( @{config2array('default.EXPORT_JOINS')} ) {
+    next unless($f);
     $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
     my ($a, $b) = split('\s*=>\s*{\s*', $f);
     $a =~ s/^\s*\'//; $a =~ s/\'$//g;
@@ -78,7 +83,7 @@ foreach my $f(@{$config->{'default.EXPORT_JOINS'}}) {
 }
 
 my @conditions = ();
-foreach my $f(@{$config->{'default.EXPORT_CONDITIONS'}}) {
+foreach my $f(@{config2array('default.EXPORT_CONDITIONS')}) {
     next unless($f);
     $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
     my ($a, $b) = split('\s*=>\s*{\s*', $f);
