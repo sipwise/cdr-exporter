@@ -96,9 +96,11 @@ foreach my $f(@{config2array('default.EXPORT_CONDITIONS')}) {
     push @conditions, { $a => { $c => $d } };
 }
 
-my $dbh = DBI->connect('DBI:mysql:'.$config->{'default.DBDB'},
-    $config->{'default.DBUSER'}, $config->{'default.DBPASS'})
+my $dbh = DBI->connect("dbi:mysql:" . $config->{'default.DBDB'} .
+	";host=".$config->{'default.DBHOST'},
+	$config->{'default.DBUSER'}, $config->{'default.DBPASS'})
     or die "failed to connect to db: $DBI::errstr";
+
 $dbh->{mysql_auto_reconnect} = 1;
 $dbh->{AutoCommit} = 0;
 
