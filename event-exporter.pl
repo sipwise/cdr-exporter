@@ -112,8 +112,8 @@ my @trailer = (
 # make sure we always select id, subscriber_id, type, old and new;
 # if you change it, make sure to adapt slice in the loop too!
 unshift @fields, (qw/
-    accounting.events.id accounting.events.subscriber_id accounting.events.type
-    accounting.events.old_status accounting.events.new_status
+    accounting.events.id accounting.events.subscriber_id accounting.events.reseller_id
+    accounting.events.type accounting.events.old_status accounting.events.new_status
 /);
 
 my @intjoins = ();
@@ -159,9 +159,9 @@ my %filter = ();
 my @filter_ids = ();
 
 while(my $row = shift @{ $rows }) {
-    my @head = @{ $row }[0 .. 4];
-    my ($id, $sub_id, $type, $old, $new) = @head;
-    my @fields = map { defined $_ ? "\"$_\"" : '""' } (@{ $row }[5 .. @{ $row }-1]);
+    my @head = @{ $row }[0 .. 5];
+    my ($id, $sub_id, $res_id, $type, $old, $new) = @head;
+    my @fields = map { defined $_ ? "\"$_\"" : '""' } (@{ $row }[6 .. @{ $row }-1]);
 
     if($config->{'default.FILTER_FLAPPING'}) {
         if($type =~ /^start_(.+)$/) {
