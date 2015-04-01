@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.13.1.3+0~mr3.7.1.3) unstable; urgency=low
+
+  [ Andrew Pogrebennyk ]
+  * [f0f38b5] MT#12381 pass DBHOST to DBI connect
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 01 Apr 2015 12:23:59 +0200
+
 ngcp-cdr-exporter (1.13.1.2+0~mr3.7.1.2) unstable; urgency=low
 
   [ Irina Peshinskaya ]
