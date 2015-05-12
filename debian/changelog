@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.13.1.5+0~mr3.7.1.5) unstable; urgency=low
+
+  [ Richard Fuchs ]
+  * [cf7d21a] MT#12385 fix sorting logic in event-exporter
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Tue, 12 May 2015 17:44:05 +0200
+
 ngcp-cdr-exporter (1.13.1.4+0~mr3.7.1.4) unstable; urgency=low
 
   [ Andreas Granig ]
