@@ -2,6 +2,8 @@ package NGCP::CDR::Export;
 
 use Digest::MD5;
 
+our $reseller_id_col = 'contract_id';
+
 sub get_mark {
     my ($dbh, $name, $resellers) = @_;
     my %marks = ();
@@ -45,7 +47,7 @@ sub update_export_status{
 
 sub get_reseller_name {
     my ($dbh, $cid) = @_;
-    my $q = $dbh->prepare('select name from billing.resellers where contract_id = ?');
+    my $q = $dbh->prepare("select name from billing.resellers where $reseller_id_col = ?");
     $q->execute($cid);
     my $rname;
     ($rname) = $q->fetchrow_array;

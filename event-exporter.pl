@@ -9,6 +9,8 @@ use NGCP::CDR::Exporter;
 # $NGCP::CDR::Exporter::debug = 1;
 # my $collid = "eventexporter";
 
+$NGCP::CDR::Export::reseller_id_col = 'id';
+
 # default config values overrides
 my $config = {
     'PREFIX' => 'sipwise',
