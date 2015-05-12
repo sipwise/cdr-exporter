@@ -122,10 +122,10 @@ for my $val (@vals) {
 }
 for my $res (keys(%res_lines)) {
 	my $res_lines = $res_lines{$res};
-	my @ids = values(%$res_lines);
+	my @ids = keys(%$res_lines);
 	@ids = sort {$a <=> $b} (@ids);
 	for my $id (@ids) {
-		my $val = $lines{$id};
+		my $val = $res_lines->{$id};
 		$val or next;
 		write_reseller_id($res, $val);
 	}
