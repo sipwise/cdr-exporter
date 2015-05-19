@@ -55,7 +55,7 @@ sub callback {
 
     my @head = @{ $row }[0 .. 5];
     my ($id, $sub_id, $res_id, $type, $old, $new) = @head;
-    my @fields = map { defined $_ ? "\"$_\"" : '""' } (@{ $row }[6 .. @{ $row }-1]);
+    my @fields = map {defined $_ ? $config{'default.QUOTES'} . "$_" . $config{'default.QUOTES'} : "$config{'default.QUOTES'}$config{'default.QUOTES'}" } (@{ $row }[6 .. @{ $row }-1]);
     my $line = join ",", @fields;
     my $reseller_line = join ",", @$res_row;
 

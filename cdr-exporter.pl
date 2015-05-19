@@ -58,7 +58,7 @@ sub callback {
     my $dst_uuid = shift @fields;
     my $src_provid = shift @fields;
     my $dst_provid = shift @fields;
-    @fields = map { defined $_ ? "'$_'" : "''" } (@fields);
+    @fields = map { defined $_ ? $config{'default.QUOTES'} . "$_" . $config{'default.QUOTES'} : "$config{'default.QUOTES'}$config{'default.QUOTES'}" } (@fields);
 
     if(confval('EXPORT_INCOMING') eq "no" && $src_uuid eq "0") {
         push @ignored_ids, $id;
