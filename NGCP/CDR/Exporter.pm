@@ -53,7 +53,8 @@ my %config = (
     'default.TRANSFER_PORT' => 22,
     'default.TRANSFER_USER' => "cdrexport",
     'default.TRANSFER_KEY' => "/root/.ssh/id_rsa",
-    'default.TRANSFER_REMOTE' => "/home/jail/home/cdrexport"
+    'default.TRANSFER_REMOTE' => "/home/jail/home/cdrexport",
+    'default.QUOTES' => '\''
 );
 
 sub DEBUG {
