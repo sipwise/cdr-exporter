@@ -51,14 +51,14 @@ my @ids;
 
 sub callback {
     my ($row, $res_row) = @_;
-
+    my $quotes = NGCP::CDR::Exporter::confval('QUOTES');
     my @fields = @{ $row };
     my $id = shift @fields;
     my $src_uuid = shift @fields;
     my $dst_uuid = shift @fields;
     my $src_provid = shift @fields;
     my $dst_provid = shift @fields;
-    @fields = map { defined $_ ? "'$_'" : "''" } (@fields);
+    @fields = map { defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes } (@fields);
 
     if(confval('EXPORT_INCOMING') eq "no" && $src_uuid eq "0") {
         push @ignored_ids, $id;
@@ -69,7 +69,7 @@ sub callback {
     write_reseller('system', $line);
     push(@ids, $id);
 
-    my $reseller_line = join ",", @$res_row;
+    my $reseller_line = join ",", map { defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes } (@$res_row);
 
     if($src_uuid ne "0") {
 	write_reseller_id($src_provid, $reseller_line);
