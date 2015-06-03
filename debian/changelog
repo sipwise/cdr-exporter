@@ -1,3 +1,20 @@
+ngcp-cdr-exporter (1.14.2.1+0~mr3.8.2.1) unstable; urgency=low
+
+  [ Andreas Granig ]
+  * [56faeaf] MT#12385 Add reseller_id to EDR head.
+
+  [ Richard Fuchs ]
+  * [2cd2f12] MT#12385 unify logic from cdr/event-exporter into a perl module
+  * [6dcd8a3] MT#12385 fix sorting logic in event-exporter
+  * [bc59cf4] MT#12385 workaround for different ID used in getting reseller names
+
+  [ Victor Seva ]
+  * [d0b9c36] MT#13001 add config QUOTES and use single quotes as default
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 03 Jun 2015 16:17:32 +0200
+
 ngcp-cdr-exporter (1.14.2.0+0~mr3.8.2.0) unstable; urgency=low
 
   [ Andrew Pogrebennyk ]
