@@ -62,7 +62,7 @@ sub callback {
 
     if(confval('EXPORT_INCOMING') eq "no" && $src_uuid eq "0") {
         push @ignored_ids, $id;
-        next;
+        return;
     }
 
     my $line = join ",", @fields;
