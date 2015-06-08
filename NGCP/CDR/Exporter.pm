@@ -299,7 +299,12 @@ sub write_wrap {
             DEBUG "### moving $src to $dst\n";
             my $err;
             -d confval('DESTDIR') . "/$reseller_dname" || 
-                File::Path::make_path(confval('DESTDIR') . "/$reseller_dname", {error => \$err});
+                File::Path::make_path(confval('DESTDIR') . "/$reseller_dname", {
+                        error => \$err,
+                        user => confval('FILES_OWNER'),
+                        group => confval('FILES_GROUP')
+                    }
+                );
             if(defined $err && @$err) {
                 DEBUG "!!! failed to create directory $reseller_dname: " . Dumper $err;
             }
