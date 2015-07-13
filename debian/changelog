@@ -1,3 +1,29 @@
+ngcp-cdr-exporter (1.16.0.0+0~mr4.1.0.0) unstable; urgency=low
+
+  [ Andrew Pogrebennyk ]
+  * [6a489c5] MT#12381 pass DBHOST to DBI connect
+
+  [ Andreas Granig ]
+  * [5be5fdf] MT#12385 Add reseller_id to EDR head.
+
+  [ Richard Fuchs ]
+  * [e0c5fd1] adding gitignore
+  * [0376ae2] MT#12385 unify logic from cdr/event-exporter into a perl module
+  * [c9ae602] MT#12385 fix sorting logic in event-exporter
+  * [c68acd8] MT#12385 workaround for different ID used in getting reseller names
+
+  [ Victor Seva ]
+  * [08330e4] MT#13001 add config QUOTES and use single quotes as default
+  * [ccf6254] MT#13237 use FILES_OWNER and FILES_GROUP when creating dirs too
+
+  [ Alexander Lutay ]
+  * [ca79eb2] MT#13001 Sync cdr-exporter.conf with version from templates.git
+  * [2a55303] MT#13241 Fix warning 'Exiting subroutine via next at line 65' for cdr-exporter.pl
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 13 Jul 2015 15:01:39 +0200
+
 ngcp-cdr-exporter (1.15.0.0+0~mr4.0.0.0) unstable; urgency=low
 
   [ Irina Peshinskaya ]
