@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.15.2.0+0~mr4.0.2.0) unstable; urgency=medium
+
+  [ Alexander Lutay ]
+  * [8860c79] MT#14067 Add quotes for sftp path (allow path with spaces)
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 22 Jul 2015 23:47:58 +0200
+
 ngcp-cdr-exporter (1.15.1.0+0~mr4.0.1.0) unstable; urgency=low
 
   [ Andrew Pogrebennyk ]
