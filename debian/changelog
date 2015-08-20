@@ -1,3 +1,16 @@
+ngcp-cdr-exporter (1.14.4.0+0~mr3.8.4.0) unstable; urgency=medium
+
+  [ Alexander Lutay ]
+  * [3e932eb] MT#13241 Fix warning 'Exiting subroutine via next at line 65' for cdr-exporter.pl
+  * [86e8e04] MT#14067 Add quotes for sftp path (allow path with spaces)
+
+  [ Victor Seva ]
+  * [710c92b] MT#13237 use FILES_OWNER and FILES_GROUP when creating dirs too
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 20 Aug 2015 23:01:36 +0200
+
 ngcp-cdr-exporter (1.14.3.0+0~mr3.8.3.0) unstable; urgency=low
 
   [ Andreas Granig ]
