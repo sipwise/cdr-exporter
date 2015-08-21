@@ -78,7 +78,11 @@ sub callback {
         if(confval('EXPORT_INCOMING') eq "no" && $src_provid ne $dst_provid) {
             # don't store incoming call to this reseller
         } else {
-	    write_reseller_id($dst_provid, $reseller_line);
+	    if ($src_uuid ne '0' && $src_provid eq $dst_provid) {
+		# skip duplicate entries
+	    } else {
+		write_reseller_id($dst_provid, $reseller_line);
+	    }
         }
     }
 }
