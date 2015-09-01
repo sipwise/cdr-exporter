@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.13.1.9+0~mr3.7.1.9) unstable; urgency=medium
+
+  [ Richard Fuchs ]
+  * [0ca075c] MT#14485 avoid duplicate CDRs for in/out within the same reseller
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Tue, 01 Sep 2015 15:57:07 +0200
+
 ngcp-cdr-exporter (1.13.1.8+0~mr3.7.1.8) unstable; urgency=medium
 
   [ Alexander Lutay ]
