@@ -61,9 +61,9 @@ sub get_reseller_name {
 
 sub get_missing_resellers {
     my ($dbh, $cids) = @_;
-    my $qs = 'select br.name, bc.id from billing.resellers br left join billing.contracts bc on br.contract_id = bc.id';
+    my $qs = "select name, $reseller_id_col from billing.resellers";
     if(@{ $cids }) {
-        $qs .= ' where bc.id not in (' . join (',', map { '?' }(1 .. @{ $cids }) ) . ")";
+        $qs .= " where $reseller_id_col not in (" . join (',', map { '?' }(1 .. @{ $cids }) ) . ")";
     }
     my $q = $dbh->prepare($qs);
     $q->execute(@{ $cids });
