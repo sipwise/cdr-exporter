@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.14.4.2+0~mr3.8.4.2) unstable; urgency=medium
+
+  [ Richard Fuchs ]
+  * [a11738e] MT#16763 fix MySQL query to exclude already-processed resellers
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 02 Dec 2015 18:41:10 +0100
+
 ngcp-cdr-exporter (1.14.4.1+0~mr3.8.4.1) unstable; urgency=medium
 
   [ Richard Fuchs ]
