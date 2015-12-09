@@ -49,8 +49,23 @@ my @ids;
 
 
 
+sub filestats_callback {
+	my ($data_row, $ref) = @_;
+
+	my $out = $$ref || [0, 0, 0, 0, 0];
+	for my $i (0 .. 4) { $$data_row[$i] //= 0 }
+
+	$$data_row[0] < $$out[0] and $$out[0] = $$data_row[0]; # min call start
+	$$out[1] += $$data_row[1]; # sum duration
+	$$data_row[0] > $$out[2] and $$out[2] = $$data_row[0]; # max call start
+	$$out[3] += $$data_row[3]; # sum carrier cost
+	$$out[4] += $$data_row[4]; # sum customer cost
+
+	$$ref = $out;
+}
+
 sub callback {
-    my ($row, $res_row) = @_;
+    my ($row, $res_row, $data_row) = @_;
     my $quotes = NGCP::CDR::Exporter::confval('QUOTES');
     my @fields = @{ $row };
     my $id = shift @fields;
@@ -66,13 +81,13 @@ sub callback {
     }
 
     my $line = join ",", @fields;
-    write_reseller('system', $line);
+    write_reseller('system', $line, \&filestats_callback, $data_row);
     push(@ids, $id);
 
     my $reseller_line = join ",", map { defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes } (@$res_row);
 
     if($src_uuid ne "0") {
-	write_reseller_id($src_provid, $reseller_line);
+	write_reseller_id($src_provid, $reseller_line, \&filestats_callback, $data_row);
     }
     if($dst_uuid ne "0") {
         if(confval('EXPORT_INCOMING') eq "no" && $src_provid ne $dst_provid) {
@@ -81,7 +96,7 @@ sub callback {
 	    if ($src_uuid ne '0' && $src_provid eq $dst_provid) {
 		# skip duplicate entries
 	    } else {
-		write_reseller_id($dst_provid, $reseller_line);
+		write_reseller_id($dst_provid, $reseller_line, \&filestats_callback, $data_row);
 	    }
         }
     }
