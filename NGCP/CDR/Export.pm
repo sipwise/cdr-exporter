@@ -1,6 +1,8 @@
 package NGCP::CDR::Export;
 
 use Digest::MD5;
+use warnings;
+use strict;
 
 our $reseller_id_col = 'contract_id';
 
@@ -107,6 +109,7 @@ sub chownmod {
 sub write_file {
     my (
         $lines, $dircomp, $prefix, $version, $ts, $lastseq, $suffix,
+        $format, $file_data,
     ) = @_;
 
     my $fn =  sprintf('%s/%s_%s_%s_%010i.%s', $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
@@ -116,16 +119,30 @@ sub write_file {
     my $ctx = Digest::MD5->new;
 
     my $num = @{ $lines };
-    unshift(@{ $lines }, sprintf('%s,%04i', $version, $num));
+    if ($format eq 'kabelplus') {
+            unshift(@{ $lines }, "'$num'". ',' x 15 ."'hdr',,,'$$file_data[0]','$$file_data[1]',,,'$$file_data[2]'," .
+			        "'$$file_data[3]','$$file_data[4]'". ',' x 10);
+    }
+    else {
+            unshift(@{ $lines }, sprintf('%s,%04i', $version, $num));
+    }
+
+    my $nl = "\n";
+    $format eq 'kabelplus' and $nl = "\r\n";
 
     for my $l (@{ $lines }) {
-        my $ol = "$l\n";
+        my $ol = "$l$nl";
         print $fd ($ol);
         $ctx->add($ol);
     }
 
     my $md5 = $ctx->hexdigest;
-    print $fd ("$md5\n");
+    if ($format eq 'kabelplus') {
+            print $fd (",,'$md5'". ',' x 13 ."'md5'". ',' x 19 . "$nl");
+    }
+    else {
+            print $fd ("$md5$nl");
+    }
 
     print("### $num data lines written to $tfn, checksum is $md5\n");
     close($fd) or die ("failed to close tmp-file $tfn ($!), stop");
