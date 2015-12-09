@@ -23,8 +23,10 @@ BEGIN {
 our $debug = 0;
 our $collid = "exporter";
 
+my $last_admin_field;
 our @admin_fields;
 our @reseller_fields;
+our @data_fields;
 my @joins;
 my @conditions;
 my $dbh;
@@ -33,11 +35,13 @@ my $sth;
 my %reseller_names;
 my %reseller_ids;
 my %reseller_lines;
+my %reseller_file_data;
 my %mark;
 my $dname;
 my $tempdir;
 my $file_ts;
 my @reseller_positions;
+my @data_positions;
 
 # default config values
 my %config = (
@@ -73,6 +77,18 @@ sub config2array {
     return $val;
 }
 
+sub get_config_fields {
+        my ($name) = @_;
+        my @ret;
+        foreach my $f(config2array($name)) {
+                $f or next;
+                $f =~ s/^#.+//; next unless($f);
+                $f =~ s/^\'//; $f =~ s/\'$//;
+                push @ret, $f;
+        }
+        return @ret;
+}
+
 sub get_config {
 	my ($coll, $cf, $conf_upd) = @_;
 
@@ -101,16 +117,9 @@ sub get_config {
 	die "Invalid destination directory '".$config{'default.DESTDIR'}."'\n"
 	    unless(-d $config{'default.DESTDIR'});
 
-	foreach my $f(config2array('ADMIN_EXPORT_FIELDS')) {
-	    $f =~ s/^#.+//; next unless($f);
-	    $f =~ s/^\'//; $f =~ s/\'$//;
-	    push @admin_fields, $f;
-	}
-	foreach my $f(config2array('RESELLER_EXPORT_FIELDS')) {
-	    $f =~ s/^#.+//; next unless($f);
-	    $f =~ s/^\'//; $f =~ s/\'$//;
-	    push @reseller_fields, $f;
-	}
+    @admin_fields = get_config_fields('ADMIN_EXPORT_FIELDS');
+    @reseller_fields = get_config_fields('RESELLER_EXPORT_FIELDS');
+    @data_fields = get_config_fields('DATA_FIELDS');
 
 	foreach my $f(@{confval('EXPORT_JOINS')}) {
 	    $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
@@ -143,6 +152,25 @@ sub confval {
 	return $config{'default.' . $val};
 }
 
+sub extract_field_positions {
+    my (@fields) = @_;
+	# extract positions of data fields from admin fields
+	my %index;
+    my @positions;
+	@index{@admin_fields} = (0..$#admin_fields);
+	for(my $i = 0; $i < @fields; $i++) {
+	    my $name = $fields[$i];
+	    if (! exists $index{$name}) {
+                push(@admin_fields, $name);
+                push(@positions, $#admin_fields);
+	    }
+        else {
+                push @positions, $index{$name};
+        }
+	}
+    return @positions;
+};
+
 sub prepare_dbh {
 	my ($trailer, $table) = @_;
 
@@ -172,16 +200,9 @@ sub prepare_dbh {
 	    push @trail, "$key $val";
 	}
 
-	# extract positions of reseller fields from admin fields
-	my %reseller_index;
-	@reseller_index{@admin_fields} = (0..$#admin_fields);
-	for(my $i = 0; $i < @reseller_fields; $i++) {
-	    my $name = $reseller_fields[$i];
-	    unless(exists $reseller_index{$name}) {
-		die "Invalid RESELLER_EXPORT_FIELDS element '$name', not available in ADMIN_EXPORT_FIELDS!";
-	    }
-	    push @reseller_positions, $reseller_index{$name};
-	}
+    $last_admin_field = $#admin_fields;
+    @reseller_positions = extract_field_positions(@reseller_fields);
+    @data_positions = extract_field_positions(@data_fields);
 
 	$q = "select " .
 	    join(", ", @admin_fields) . " from $table " .
@@ -223,24 +244,27 @@ sub run {
 	my $sth = $dbh->prepare($q);
 	$sth->execute();
 	while(my $row = $sth->fetchrow_arrayref) {
+        my @admin_row = @$row[0 .. $last_admin_field];
 		my @res_row = @$row[@reseller_positions];
-		$cb->($row, \@res_row);
+        my @data_row = @$row[@data_positions];
+		$cb->(@admin_row, \@res_row, \@data_row);
 	}
 }
 
 sub write_reseller {
-	my ($reseller, $line) = @_;
+	my ($reseller, $line, $callback, $callback_arg) = @_;
 	push(@{$reseller_lines{$reseller}}, $line);
+    $callback and $callback->($callback_arg, \$reseller_file_data{$reseller});
 	write_wrap($reseller);
 }
 
 sub write_reseller_id {
-	my ($id, $line) = @_;
+	my ($id, $line, $callback, $callback_arg) = @_;
         if(!exists $reseller_names{$id}) {
             $reseller_names{$id} = NGCP::CDR::Export::get_reseller_name($dbh, $id);
             $reseller_ids{$reseller_names{$id}} = $id;
         }
-        write_reseller($reseller_names{$id}, $line);
+        write_reseller($reseller_names{$id}, $line, $callback, $callback_arg);
 }
 
 sub write_wrap {
@@ -286,8 +310,10 @@ sub write_wrap {
         NGCP::CDR::Export::write_file(
             \@filevals, $reseller_tempdir, confval('PREFIX'),
             confval('VERSION'), $file_ts, $file_idx, confval('SUFFIX'),
+            confval('FILEFORMAT') // 'default', $reseller_file_data{$reseller},
         );
         $rec_idx -= $recs;
+        delete($reseller_file_data{$reseller});
 
     } while($rec_idx > 0);
 
