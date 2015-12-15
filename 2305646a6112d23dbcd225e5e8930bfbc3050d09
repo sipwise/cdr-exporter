@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a96c907_f35dd249",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 9
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2015-12-15T10:33:50Z",
+      "side": 1,
+      "message": "You could assign $nl inside the previous conditional.",
+      "revId": "2305646a6112d23dbcd225e5e8930bfbc3050d09",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a96c907_e547454a",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 9
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2015-12-15T10:33:50Z",
+      "side": 1,
+      "message": "I assume the call site in event-exporter.pl is fine? But from a quick skimming it feels like it could end up missing some fields now?",
+      "revId": "2305646a6112d23dbcd225e5e8930bfbc3050d09",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
