@@ -51,6 +51,24 @@
       "revId": "2305646a6112d23dbcd225e5e8930bfbc3050d09",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a96c907_fb3928d9",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 9
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2015-12-15T13:35:12Z",
+      "side": 1,
+      "message": "Previously it was passing the whole row first, now it passes it split into admin_row and data_row, but the call site in event-exporter.pl only unpacks two arguments, so just wondering if that is fine given that I don\u0027t know how the row looks like.",
+      "parentUuid": "7a96c907_48b410f2",
+      "revId": "2305646a6112d23dbcd225e5e8930bfbc3050d09",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
     }
   ]
 }
