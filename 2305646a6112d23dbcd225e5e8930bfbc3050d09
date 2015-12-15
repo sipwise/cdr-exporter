@@ -87,6 +87,24 @@
       "revId": "2305646a6112d23dbcd225e5e8930bfbc3050d09",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a96c907_dbba2c0a",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 9
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2015-12-15T14:18:19Z",
+      "side": 1,
+      "message": "Ah ok, thanks. Perhaps a code comment explaining this would be nice? :)",
+      "parentUuid": "7a96c907_7b4d1872",
+      "revId": "2305646a6112d23dbcd225e5e8930bfbc3050d09",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
     }
   ]
 }
