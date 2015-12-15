@@ -69,6 +69,24 @@
       "revId": "2305646a6112d23dbcd225e5e8930bfbc3050d09",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a96c907_7b4d1872",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 9
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1000008
+      },
+      "writtenOn": "2015-12-15T13:41:17Z",
+      "side": 1,
+      "message": "@admin_row should still be the complete row as specified by ADMIN_EXPORT_FIELDS. @data_row is optional, populated only when DATA_FIELDS is specified, which event-exporter doesn\u0027t use.\n\nThe split is necessary because the DB query is done using @admin_fields only, so when DATA_FIELDS (or the RESELLER equivalent) contains fields not present in ADMIN_FIELDS, they must be added to the query and then later removed from @admin_fields, so the callback function only sees the fields from ADMIN_FIELDS.\n\nIt\u0027s a bit of a kludge, but a cleaner implementation would require a rewrite of the whole thing.",
+      "parentUuid": "7a96c907_fb3928d9",
+      "revId": "2305646a6112d23dbcd225e5e8930bfbc3050d09",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
     }
   ]
 }
