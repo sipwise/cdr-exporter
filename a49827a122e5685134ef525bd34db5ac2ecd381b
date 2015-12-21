@@ -1,0 +1,7 @@
+Verified+1: Jenkins Jenkins <jenkins@sipwise.com>
+Code-Review+2: Michael Prokop <mprokop@sipwise.com>
+Submitted-by: Guillem Jover <gjover@sipwise.com>
+Submitted-at: Mon, 21 Dec 2015 11:47:46 +0100
+Reviewed-on: http://gerrit.mgm.sipwise.com/3856
+Project: cdr-exporter
+Branch: refs/heads/master
