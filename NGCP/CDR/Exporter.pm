@@ -121,7 +121,7 @@ sub get_config {
     @reseller_fields = get_config_fields('RESELLER_EXPORT_FIELDS');
     @data_fields = get_config_fields('DATA_FIELDS');
 
-	foreach my $f(@{confval('EXPORT_JOINS')}) {
+	foreach my $f(get_config_fields('EXPORT_JOINS')) {
 	    $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
 	    my ($a, $b) = split('\s*=>\s*{\s*', $f);
 	    $a =~ s/^\s*\'//; $a =~ s/\'$//g;
@@ -132,7 +132,7 @@ sub get_config {
 	    push @joins, { $a => { $c => $d } };
 	}
 
-	foreach my $f(@{confval('EXPORT_CONDITIONS')}) {
+	foreach my $f(get_config_fields('EXPORT_CONDITIONS')) {
 	    next unless($f);
 	    $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
 	    my ($a, $b) = split('\s*=>\s*{\s*', $f);
