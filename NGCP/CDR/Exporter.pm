@@ -42,6 +42,7 @@ my $tempdir;
 my $file_ts;
 my @reseller_positions;
 my @data_positions;
+my @temp_dirs;
 
 # default config values
 my %config = (
@@ -217,6 +218,7 @@ sub prepare_dbh {
 sub prepare_output {
 	my $tempfh = File::Temp->newdir(undef, CLEANUP => 1);
 	$tempdir = $tempfh->dirname;
+    push(@temp_dirs, $tempfh);
 
 	my $now = time();
 	my @now = localtime($now);
