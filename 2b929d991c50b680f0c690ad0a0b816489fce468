@@ -16,6 +16,24 @@
       "revId": "2b929d991c50b680f0c690ad0a0b816489fce468",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a7fa997_79044315",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1000008
+      },
+      "writtenOn": "2016-02-17T14:54:04Z",
+      "side": 1,
+      "message": "Yes I\u0027m aware that there\u0027s other ways of doing this. I thought this was a quick way to fix the problem without changing too much around. Can we please concentrate on things that are actually broken?",
+      "parentUuid": "7a7fa997_b6a9887d",
+      "revId": "2b929d991c50b680f0c690ad0a0b816489fce468",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
     }
   ]
 }
