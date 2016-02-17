@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a7fa997_b6a9887d",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2016-02-17T11:54:00Z",
+      "side": 1,
+      "message": "You could instead assign the File::Temp object into $tempdir, which is global and used in other parts of the code. And the dirname method is automatically used in string context. Also given that there\u0027s a single $tempdir, it seems to me that using an array makes no difference?",
+      "revId": "2b929d991c50b680f0c690ad0a0b816489fce468",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
