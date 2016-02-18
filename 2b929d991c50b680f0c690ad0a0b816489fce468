@@ -52,6 +52,24 @@
       "revId": "2b929d991c50b680f0c690ad0a0b816489fce468",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a7fa997_dc53056b",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1000008
+      },
+      "writtenOn": "2016-02-18T14:29:29Z",
+      "side": 1,
+      "message": "That\u0027s not sufficient because $tempdir is used in other places that may not expect it to be an object. I haven\u0027t checked if this is actually the case, but either way this is a safer way to do it. Leave a string where there was a string.",
+      "parentUuid": "7a7fa997_b98f3bcc",
+      "revId": "2b929d991c50b680f0c690ad0a0b816489fce468",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
     }
   ]
 }
