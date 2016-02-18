@@ -34,6 +34,24 @@
       "revId": "2b929d991c50b680f0c690ad0a0b816489fce468",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a7fa997_b98f3bcc",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2016-02-18T10:07:37Z",
+      "side": 1,
+      "message": "I was only concentrating on the actual problem, and the proposed fix which seems to be a workaround, instead of properly fixing the root cause, which should be a simple three line patch, something like?\n\n-my $tempfh \u003d File::Temp-\u003enewdir(undef, CLEANUP \u003d\u003e 1);\n-$tempdir \u003d $tempfh-\u003edirname;\n+$tempdir \u003d File::Temp-\u003enewdir;",
+      "parentUuid": "7a7fa997_79044315",
+      "revId": "2b929d991c50b680f0c690ad0a0b816489fce468",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
     }
   ]
 }
