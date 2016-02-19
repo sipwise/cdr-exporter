@@ -70,6 +70,24 @@
       "revId": "2b929d991c50b680f0c690ad0a0b816489fce468",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a7fa997_4a2ba330",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2016-02-19T12:19:05Z",
+      "side": 1,
+      "message": "I did check initially, and all instances looked fine to me ($tempdir and $reseller_tempdir).\n\nIf you insist with the workaround, I\u0027d use a scalar (there\u0027s no point in the array as I mentioned initially), the simplest would be to just increase the $tmpfh scope, and I\u0027d document why the additional variable is needed but never used again, because someone else coming later might be tempted to just remove it…",
+      "parentUuid": "7a7fa997_dc53056b",
+      "revId": "2b929d991c50b680f0c690ad0a0b816489fce468",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
     }
   ]
 }
