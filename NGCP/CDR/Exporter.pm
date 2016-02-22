@@ -194,8 +194,7 @@ sub prepare_dbh {
 }
 
 sub prepare_output {
-	my $tempfh = File::Temp->newdir(undef, CLEANUP => 1);
-	$tempdir = $tempfh->dirname;
+	$tempdir = File::Temp->newdir;
 
 	my $now = time();
 	my @now = localtime($now);
