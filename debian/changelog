@@ -1,3 +1,22 @@
+ngcp-cdr-exporter (1.19.0.0+0~mr4.4.0.0) unstable; urgency=medium
+
+  [ Richard Fuchs ]
+  * [80e2be0] MT#14459 implement legacy export options
+
+  [ Guillem Jover ]
+  * [a49827a] MT#16473 Convert debian/copyright to machine-readable format
+  * [06a776c] MT#17955 Widen the scope of the File::Temp temporary directory object
+
+  [ Andreas Granig ]
+  * [c10d0f9] MT#12385 Fix using EXPORT_CONDITIONS
+
+  [ Michael Prokop ]
+  * [12e900f] MT#17699 Bump Standards-Version to 3.9.7
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 21 Mar 2016 22:06:13 +0100
+
 ngcp-cdr-exporter (1.18.0.0+0~mr4.3.0.0) unstable; urgency=medium
 
   [ Richard Fuchs ]
