@@ -249,7 +249,7 @@ sub write_wrap {
     my $vals = $reseller_lines{$reseller};
     my $rec_idx = @$vals;
     my $max = confval('MAX_ROWS_PER_FILE') // $rec_idx;
-    ($force == 0 && $rec_idx <= $max) and return;
+    ($force == 0 && $rec_idx < $max) and return;
     ($force == 1 && $rec_idx == 0) and return;
     my $reseller_contract_id = "";
     my $mark_query = undef;
