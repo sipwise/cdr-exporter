@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.18.2.0+0~mr4.3.2.0) unstable; urgency=medium
+
+  [ Richard Fuchs ]
+  * [08c0cfe] MT#18879 fix off-by one error resulting in files with single entries
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 04 Apr 2016 23:18:16 +0200
+
 ngcp-cdr-exporter (1.18.1.0+0~mr4.3.1.0) unstable; urgency=medium
 
   [ Richard Fuchs ]
