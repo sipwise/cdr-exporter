@@ -272,7 +272,7 @@ sub write_wrap {
     $reseller_lines{$reseller} //= [];
     my $vals = $reseller_lines{$reseller};
     my $rec_idx = @$vals;
-    my $max = confval('MAX_ROWS_PER_FILE') // $rec_idx;
+    my $max = confval('MAX_ROWS_PER_FILE') // ($rec_idx + 1);
     ($force == 0 && $rec_idx < $max) and return;
     ($force == 1 && $rec_idx == 0) and return;
     my $reseller_contract_id = "";
@@ -333,7 +333,7 @@ sub write_wrap {
             if(defined $err && @$err) {
                 DEBUG "!!! failed to create directory $reseller_dname: " . Dumper $err;
             }
-            unless(copy($src, $dst)) {
+            unless(move($src, $dst)) {
                 DEBUG "!!! failed to move $src to $dst: $!\n";
             } else {
                 DEBUG "### successfully moved $src to final destination $dst\n";
