@@ -1,3 +1,13 @@
+ngcp-cdr-exporter (1.19.1.0+0~mr4.4.1.0) unstable; urgency=medium
+
+  [ Richard Fuchs ]
+  * [778a349] MT#18879 fix off-by one error resulting in files with single entries
+  * [93394b7] MT#19569 solve run-away loop in event-exporter
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 23 May 2016 18:36:39 +0200
+
 ngcp-cdr-exporter (1.19.0.0+0~mr4.4.0.0) unstable; urgency=medium
 
   [ Richard Fuchs ]
