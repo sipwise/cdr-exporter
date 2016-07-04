@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.18.3.0+0~mr4.3.3.0) unstable; urgency=medium
+
+  [ Richard Fuchs ]
+  * [f4f2572] MT#19569 solve run-away loop in event-exporter
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 04 Jul 2016 12:56:50 +0200
+
 ngcp-cdr-exporter (1.18.2.0+0~mr4.3.2.0) unstable; urgency=medium
 
   [ Richard Fuchs ]
