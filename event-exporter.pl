@@ -31,6 +31,7 @@ unshift @NGCP::CDR::Exporter::admin_fields, (qw/
 /);
 my @trailer = (
     { 'order by' => 'accounting.events.id' },
+    { 'limit' => '3000' },
 );
 
 NGCP::CDR::Exporter::prepare_dbh(\@trailer, 'accounting.events');
