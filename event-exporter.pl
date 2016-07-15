@@ -46,10 +46,6 @@ my @filter_ids = ();
 
 NGCP::CDR::Exporter::run(\&callback);
 
-
-
-
-
 sub callback {
     my ($row, $res_row) = @_;
     my $quotes = NGCP::CDR::Exporter::confval('QUOTES');
@@ -75,7 +71,7 @@ sub callback {
             my $k = "$sub_id;$t;$old";
             my $ids = $filter{$k} // [];
             if(@{ $ids }) {
-                my $old_id = pop @{ $ids }; 
+                my $old_id = pop @{ $ids };
                 say "... id $id is an update event of id $old_id, merge";
                 delete $lines{$old_id};
 		$res_id and delete $res_lines{$res_id}{$old_id};
@@ -97,7 +93,7 @@ sub callback {
             my $k = "$sub_id;$t;$old";
             my $ids = $filter{$k} // [];
             if(@{ $ids }) {
-                my $old_id = pop @{ $ids }; 
+                my $old_id = pop @{ $ids };
                 say "... id $id is an end event of id $old_id, filter";
                 push @filter_ids, ($id, $old_id);
                 delete $lines{$old_id};
@@ -133,20 +129,13 @@ for my $res (keys(%res_lines)) {
 	}
 }
 
-
-
-
 NGCP::CDR::Exporter::finish();
-
-
 
 my @ids = keys %lines;
 
 update_export_status("accounting.events", \@filter_ids, "filtered");
 update_export_status("accounting.events", \@ids, "ok");
 
-
 NGCP::CDR::Exporter::commit();
-
 
 # vim: set tabstop=4 expandtab:
