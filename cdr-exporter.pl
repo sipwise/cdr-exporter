@@ -12,12 +12,8 @@ use NGCP::CDR::Exporter;
 NGCP::CDR::Exporter::get_config('exporter', 'cdr-exporter.conf');
 
 
-
 print("+++ Start run with DB " . (confval('DBUSER') || "(undef)") .
 	"\@".confval('DBDB')." to ".confval('PREFIX')."\n");
-
-
-
 
 # add fields we definitely need, will be removed during processing
 unshift @NGCP::CDR::Exporter::admin_fields, qw/
@@ -27,27 +23,20 @@ unshift @NGCP::CDR::Exporter::admin_fields, qw/
     accounting.cdr.source_provider_id
     accounting.cdr.destination_provider_id
 /;
+
 my @trailer = (
     { 'order by' => 'accounting.cdr.id' },
 );
 
+# working vars at beginning:
+my @ignored_ids = ();
+my @ids = ();
 
 NGCP::CDR::Exporter::prepare_dbh(\@trailer, 'accounting.cdr');
 
-
 NGCP::CDR::Exporter::prepare_output();
 
-
-
 NGCP::CDR::Exporter::run(\&callback);
-
-
-
-
-my @ignored_ids = ();
-my @ids;
-
-
 
 sub callback {
     my ($row, $res_row) = @_;
@@ -89,13 +78,7 @@ sub callback {
 
 #DEBUG "ignoring cdr ids " . (join ",", @ignored_ids);
 
-
-
-
 NGCP::CDR::Exporter::finish();
-
-
-
 
 update_export_status("accounting.cdr", \@ids, "ok");
 # TODO: should be tagged as ignored/skipped/whatever
