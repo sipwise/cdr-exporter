@@ -26,6 +26,7 @@ unshift @NGCP::CDR::Exporter::admin_fields, qw/
 
 my @trailer = (
     { 'order by' => 'accounting.cdr.id' },
+    { 'limit' => '300000' },
 );
 
 # working vars at beginning:
