@@ -1,0 +1,7 @@
+Verified+1: Jenkins Jenkins <jenkins@sipwise.com>
+Code-Review+2: Andreas Granig <agranig@sipwise.com>
+Submitted-by: Rene Krenn <rkrenn@sipwise.com>
+Submitted-at: Thu, 21 Jul 2016 10:57:45 +0200
+Reviewed-on: http://gerrit.mgm.sipwise.com/7052
+Project: cdr-exporter
+Branch: refs/heads/master
