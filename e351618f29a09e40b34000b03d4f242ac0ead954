@@ -1,0 +1,7 @@
+Verified+1: Jenkins Jenkins <jenkins@sipwise.com>
+Code-Review+2: Alexander Lutay <alutay@sipwise.com>
+Submitted-by: Alexander Lutay <alutay@sipwise.com>
+Submitted-at: Thu, 21 Jul 2016 14:58:49 +0200
+Reviewed-on: http://gerrit.mgm.sipwise.com/7177
+Project: cdr-exporter
+Branch: refs/heads/mr3.8.1
