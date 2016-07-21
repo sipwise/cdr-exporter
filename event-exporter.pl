@@ -3,8 +3,11 @@
 use strict;
 use warnings;
 use v5.14;
+use Fcntl qw(LOCK_EX LOCK_NB);
 
 use NGCP::CDR::Exporter;
+
+die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
 
 # $NGCP::CDR::Exporter::debug = 1;
 # my $collid = "eventexporter";
@@ -139,4 +142,6 @@ update_export_status("accounting.events", \@ids, "ok");
 
 NGCP::CDR::Exporter::commit();
 
-# vim: set tabstop=4 expandtab:
+__DATA__
+This exists to allow the locking code at the beginning of the file to work.
+DO NOT REMOVE THESE LINES!
