@@ -1,3 +1,13 @@
+ngcp-cdr-exporter (1.14.7.3+0~mr3.8.7.3) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [970edfa] MT#19733 limit the number of cdrs processed per cycle
+  * [55c2f44] MT#19731 prevent cdr-exporter.pl running concurrently
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 21 Jul 2016 15:44:18 +0200
+
 ngcp-cdr-exporter (1.14.7.2+0~mr3.8.7.2) unstable; urgency=medium
 
   [ Rene Krenn ]
