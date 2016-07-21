@@ -3,11 +3,14 @@
 use strict;
 use warnings;
 use v5.14;
+use Fcntl qw(LOCK_EX LOCK_NB);
 
 use NGCP::CDR::Exporter;
 
 # $NGCP::CDR::Exporter::debug = 1;
 # my $collid = "exporter";
+
+die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
 
 NGCP::CDR::Exporter::get_config('exporter', 'cdr-exporter.conf');
 
@@ -101,3 +104,7 @@ update_export_status("accounting.cdr", \@ids, "ok");
 update_export_status("accounting.cdr", \@ignored_ids, "ok");
 
 NGCP::CDR::Exporter::commit();
+
+__DATA__
+This exists to allow the locking code at the beginning of the file to work.
+DO NOT REMOVE THESE LINES!
