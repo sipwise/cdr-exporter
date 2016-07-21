@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.14.1.6+0~mr3.8.1.6) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [6326100] MT#21303 cdr-exporter does not update cdr status
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 21 Jul 2016 13:39:47 +0200
+
 ngcp-cdr-exporter (1.14.1.5+0~mr3.8.1.5) unstable; urgency=medium
 
   [ Alexander Lutay ]
