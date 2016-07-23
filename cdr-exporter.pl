@@ -83,6 +83,9 @@ foreach my $f(@{$config->{'default.EXPORT_JOINS'}}) {
 }
 
 my @conditions = ();
+if($config->{'default.EXPORT_FAILED'} eq "no") {
+    push @conditions, { 'accounting.cdr.call_status' => { '=' => '"ok"' } };
+}
 foreach my $f(@{$config->{'default.EXPORT_CONDITIONS'}}) {
     next unless($f);
     $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
@@ -310,7 +313,7 @@ sub write_wrap {
         if(-f $src) {
             DEBUG "### moving $src to $dst\n";
             my $err;
-            -d $config->{'default.CDRDIR'} . "/$reseller_dname" || 
+            -d $config->{'default.CDRDIR'} . "/$reseller_dname" ||
                 File::Path::make_path($config->{'default.CDRDIR'} . "/$reseller_dname", {error => \$err});
             if(defined $err && @$err) {
                 DEBUG "!!! failed to create directory $reseller_dname: " . Dumper $err;
@@ -344,4 +347,3 @@ NGCP::CDR::Export::update_export_status($dbh, "accounting.cdr", \@ids, "ok");
 NGCP::CDR::Export::update_export_status($dbh, "accounting.cdr", \@ignored_ids, "ok");
 
 $dbh->commit or die("failed to commit db changes: " . $dbh->errstr);
-
