@@ -123,6 +123,12 @@ sub get_config {
 	    push @joins, { $a => { $c => $d } };
 	}
 
+	if(confval('EXPORT_FAILED') eq "no") {
+		push @conditions, { 'accounting.cdr.call_status' => { '=' => '"ok"' } };
+	}
+	if(confval('EXPORT_UNRATED') eq "no") {
+		push @conditions, { 'accounting.cdr.rating_status' => { '=' => '"ok"' } };
+	}
 	foreach my $f(@{confval('EXPORT_CONDITIONS')}) {
 	    next unless($f);
 	    $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
@@ -298,7 +304,7 @@ sub write_wrap {
         if(-f $src) {
             DEBUG "### moving $src to $dst\n";
             my $err;
-            -d confval('DESTDIR') . "/$reseller_dname" || 
+            -d confval('DESTDIR') . "/$reseller_dname" ||
                 File::Path::make_path(confval('DESTDIR') . "/$reseller_dname", {
                         error => \$err,
                         user => confval('FILES_OWNER'),
