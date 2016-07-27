@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.14.4.5+0~mr3.8.4.5) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [f782bc9] MT#21519 backport support for cdrexport.export_failed
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 27 Jul 2016 20:23:21 +0200
+
 ngcp-cdr-exporter (1.14.4.4+0~mr3.8.4.4) unstable; urgency=medium
 
   [ Rene Krenn ]
