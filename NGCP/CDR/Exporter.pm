@@ -58,7 +58,8 @@ my %config = (
     'default.TRANSFER_USER' => "cdrexport",
     'default.TRANSFER_KEY' => "/root/.ssh/id_rsa",
     'default.TRANSFER_REMOTE' => "/home/jail/home/cdrexport",
-    'default.QUOTES' => "'"
+    'default.QUOTES' => "'",
+    'default.CSV_SEP' => ',',
 );
 
 sub DEBUG {
@@ -98,13 +99,13 @@ sub get_config {
 		$config{'default.' . $key} = $$conf_upd{$key};
 	}
 
-	my $config_file;
-	foreach my $cp(@config_paths) {
-	    if(-f "$cp/$cf") {
-		$config_file = "$cp/$cf";
-		last;
-	    }
-	}
+    my $config_file;
+    foreach my $cp(@config_paths) {
+        if(-f "$cp/$cf") {
+            $config_file = "$cp/$cf";
+            last;
+        }
+    }
 	die "Config file $cf not found in path " . (join " or ", @config_paths) . "\n"
 	    unless $config_file;
 
@@ -148,8 +149,8 @@ sub get_config {
 
 
 sub confval {
-	my ($val) = @_;
-	return $config{'default.' . $val};
+    my ($val) = @_;
+    return $config{'default.' . $val};
 }
 
 sub extract_field_positions {
