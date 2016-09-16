@@ -124,7 +124,7 @@ sub write_file {
 			        "'".($$file_data[3]//'')."','".($$file_data[4]//'')."'". ',' x 10);
     }
     else {
-            unshift(@{ $lines }, sprintf('%s,%04i', $version, $num));
+            unshift(@{ $lines }, sprintf('%s,%04i', $version, $num)); # also in header?
     }
 
     my $nl = "\n";
