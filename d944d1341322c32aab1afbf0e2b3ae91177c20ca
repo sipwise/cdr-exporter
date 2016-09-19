@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba3841fe_8773c5b0",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2016-09-19T08:38:55Z",
+      "side": 1,
+      "message": "please share your opinion here.\n\nIMO, no, then the header is just a special first line that is relieable to parse. on the other hand, this way, the configured separator could reliably be checked. and only someone who changes the settings will be affected anyways",
+      "range": {
+        "startLine": 127,
+        "startChar": 70,
+        "endLine": 127,
+        "endChar": 87
+      },
+      "revId": "d944d1341322c32aab1afbf0e2b3ae91177c20ca",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
