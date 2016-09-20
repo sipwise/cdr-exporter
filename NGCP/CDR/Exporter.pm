@@ -26,7 +26,7 @@ our $collid = "exporter";
 our @admin_fields;
 our @reseller_fields;
 my @joins;
-my @conditions;
+our @conditions;
 my $dbh;
 my $q;
 my $sth;
@@ -123,12 +123,6 @@ sub get_config {
 	    push @joins, { $a => { $c => $d } };
 	}
 
-	if(confval('EXPORT_FAILED') eq "no") {
-		push @conditions, { 'accounting.cdr.call_status' => { '=' => '"ok"' } };
-	}
-	if(confval('EXPORT_UNRATED') eq "no") {
-		push @conditions, { 'accounting.cdr.rating_status' => { '=' => '"ok"' } };
-	}
 	foreach my $f(@{confval('EXPORT_CONDITIONS')}) {
 	    next unless($f);
 	    $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
