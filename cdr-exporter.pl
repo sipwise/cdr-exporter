@@ -14,7 +14,6 @@ die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on 
 
 NGCP::CDR::Exporter::get_config('exporter', 'cdr-exporter.conf');
 
-
 print("+++ Start run with DB " . (confval('DBUSER') || "(undef)") .
 	"\@".confval('DBDB')." to ".confval('PREFIX')."\n");
 
@@ -31,6 +30,13 @@ my @trailer = (
     { 'order by' => 'accounting.cdr.id' },
     { 'limit' => '300000' },
 );
+
+if(confval('EXPORT_FAILED') eq "no") {
+	push @NGCP::CDR::Exporter::conditions, { 'accounting.cdr.call_status' => { '=' => '"ok"' } };
+}
+if(confval('EXPORT_UNRATED') eq "no") {
+	push @NGCP::CDR::Exporter::conditions, { 'accounting.cdr.rating_status' => { '=' => '"ok"' } };
+}
 
 # working vars at beginning:
 my @ignored_ids = ();
