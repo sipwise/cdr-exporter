@@ -52,12 +52,13 @@ NGCP::CDR::Exporter::run(\&callback);
 
 sub callback {
     my ($row, $res_row) = @_;
-    my $quotes = NGCP::CDR::Exporter::confval('QUOTES');
+    my $quotes = confval('QUOTES');
+    my $sep = confval('CSV_SEP');
     my @head = @{ $row }[0 .. 5];
     my ($id, $sub_id, $res_id, $type, $old, $new) = @head;
     my @fields = map {defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes } (@{ $row }[6 .. @{ $row }-1]);
-    my $line = join ",", @fields;
-    my $reseller_line = join ",", map {defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes }(@$res_row);
+    my $line = join "$sep", @fields;
+    my $reseller_line = join "$sep", map {defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes }(@$res_row);
 
     if(confval('FILTER_FLAPPING')) {
         if($type =~ /^start_(.+)$/) {
