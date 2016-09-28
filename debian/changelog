@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (1.14.7.5+0~mr3.8.7.5) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [c854003] MT#22776 export_failed and export_unrated for cdr-exporter only
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 28 Sep 2016 10:15:28 +0200
+
 ngcp-cdr-exporter (1.14.7.4+0~mr3.8.7.4) unstable; urgency=medium
 
   [ Rene Krenn ]
