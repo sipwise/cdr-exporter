@@ -1,3 +1,16 @@
+ngcp-cdr-exporter (1.14.8.1+0~mr3.8.8.1) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [60eb402] MT#21303 cdr-exporter does not update cdr status
+  * [4205072] MT#19733 limit the number of cdrs processed per cycle
+  * [1559190] MT#19731 prevent cdr-exporter.pl running concurrently
+  * [c2cca8f] MT#21519 backport support for cdrexport.export_failed
+  * [b833c5f] MT#22776 export_failed and export_unrated for cdr-exporter only
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 03 Oct 2016 18:05:12 +0200
+
 ngcp-cdr-exporter (1.14.8.0+0~mr3.8.8.0) unstable; urgency=medium
 
   * New release.
