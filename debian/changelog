@@ -1,3 +1,14 @@
+ngcp-cdr-exporter (5.0.0.0+0~mr5.0.0.0) unstable; urgency=medium
+
+  [ Gerhard Jungwirth ]
+  * [3c83373] MT#22467 make separator configurable
+  * [23a791c] MT#22467 configurable csv_separator for events
+
+  [ Rene Krenn ]
+  * [a2af84d] MT#21789 eventexporter daily/monthly folder options
+
+ -- Alexander Lutay <alutay@sipwise.com>  Fri, 21 Oct 2016 14:41:32 +0200
+
 ngcp-cdr-exporter (1.21.0.0+0~mr5.0.0.0) unstable; urgency=medium
 
   [ Guillem Jover ]
