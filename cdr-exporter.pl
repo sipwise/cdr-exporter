@@ -15,7 +15,7 @@ die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on 
 NGCP::CDR::Exporter::get_config('exporter', 'cdr-exporter.conf');
 
 
-print("+++ Start run with DB " . (confval('DBUSER') || "(undef)") .
+NGCP::CDR::Exporter::DEBUG("+++ Start run with DB " . (confval('DBUSER') || "(undef)") .
 	"\@".confval('DBDB')." to ".confval('PREFIX')."\n");
 
 # add fields we definitely need, will be removed during processing

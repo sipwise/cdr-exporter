@@ -1,5 +1,7 @@
 package NGCP::CDR::Transfer;
 
+use strict;
+use warnings;
 use File::Basename;
 use File::Temp;
 use Net::SFTP::Foreign;
@@ -9,12 +11,12 @@ sub sftp_sh {
     my ($src, $host, $port, $dir, $user, $key) = @_;
 
     my $fname = basename($src);
-    print "### transferring $src to $user\@$host:$port at $dir/$fname via sftp-sh\n";
+    NGCP::CDR::Exporter::DEBUG("transferring $src to $user\@$host:$port at $dir/$fname via sftp-sh\n");
 
     my $fh = File::Temp->new(UNLINK => 1);
     print $fh "cd '$dir'\nput '$src' $fname";
     my $cmd = "/usr/bin/sftp -b ".$fh->filename." -P $port -i $key $user\@$host";
-    print "### using command $cmd\n";
+    NGCP::CDR::Exporter::DEBUG("using command $cmd\n");
 
     capturex([0], split(" ", $cmd));
 }
@@ -36,7 +38,7 @@ sub sftp {
     }
 
     my $fname = basename($src);
-    print "### transferring $src to $user\@$host:$port at $dir/$fname\n";
+    NGCP::CDR::Exporter::DEBUG("transferring $src to $user\@$host:$port at $dir/$fname\n");
     $sftp->setcwd($dir);
     $sftp->put($src, $fname);
 }
