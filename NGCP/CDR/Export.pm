@@ -144,12 +144,12 @@ sub write_file {
             print $fd ("$md5$nl");
     }
 
-    print("### $num data lines written to $tfn, checksum is $md5\n");
+    NGCP::CDR::Exporter::DEBUG("$num data lines written to $tfn, checksum is $md5\n");
     close($fd) or die ("failed to close tmp-file $tfn ($!), stop");
     undef($ctx);
 
     rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop");
-    print("### successfully moved $tfn to $fn\n");
+    NGCP::CDR::Exporter::DEBUG("successfully moved $tfn to $fn\n");
 }
 
 1;

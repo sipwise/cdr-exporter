@@ -13,11 +13,12 @@ use File::Copy;
 use File::Path;
 use NGCP::CDR::Transfer;
 use Data::Dumper;
+use Sys::Syslog;
 
 BEGIN {
 	require Exporter;
 	our @ISA = qw(Exporter);
-	our @EXPORT = qw(DEBUG confval write_reseller write_reseller_id update_export_status);
+	our @EXPORT = qw(DEBUG confval write_reseller write_reseller_id update_export_status ilog);
 }
 
 our $debug = 0;
@@ -36,6 +37,8 @@ my %reseller_names;
 my %reseller_ids;
 my %reseller_lines;
 my %reseller_file_data;
+my %reseller_counts;
+my %reseller_file_counts;
 my %mark;
 my $dname;
 my $tempdir;
@@ -63,7 +66,10 @@ my %config = (
 );
 
 sub DEBUG {
-    say join (' ', @_);
+    ilog('debug', @_);
+}
+sub ERR {
+    ilog('err', @_);
 }
 
 my @config_paths = (qw#
@@ -114,6 +120,8 @@ sub get_config {
 
 	# backwards compat
 	$config{'default.DESTDIR'} //= $config{'default.CDRDIR'} // $config{'default.EDRDIR'};
+
+    start_log();
 
 	die "Invalid destination directory '".$config{'default.DESTDIR'}."'\n"
 	    unless(-d $config{'default.DESTDIR'});
@@ -241,20 +249,34 @@ sub prepare_output {
 sub run {
 	my ($cb) = @_;
 
+    ilog('info', 'Started execution');
+
+    my $rec_in = 0;
 	my $sth = $dbh->prepare($q);
 	$sth->execute();
 	while(my $row = $sth->fetchrow_arrayref) {
+        $rec_in++;
         my @admin_row = @$row[0 .. $last_admin_field];
 		my @res_row = @$row[@reseller_positions];
         my @data_row = @$row[@data_positions];
 		$cb->(\@admin_row, \@res_row, \@data_row);
 	}
+
+    for my $key (keys(%reseller_counts)) {
+            ilog('info', "Wrote $reseller_counts{$key} records for reseller $key");
+    }
+    for my $key (keys(%reseller_file_counts)) {
+            ilog('info', "Created $reseller_counts{$key} files for reseller $key");
+    }
+
+    ilog('info', 'Finished processing records');
 }
 
 sub write_reseller {
 	my ($reseller, $line, $callback, $callback_arg) = @_;
 	push(@{$reseller_lines{$reseller}}, $line);
     $callback and $callback->($callback_arg, \$reseller_file_data{$reseller});
+    $reseller_counts{$reseller}++;
 	write_wrap($reseller);
 }
 
@@ -304,7 +326,7 @@ sub write_wrap {
         my $err;
         -d $reseller_tempdir || File::Path::make_path($reseller_tempdir, {error => \$err});
         if(defined $err && @$err) {
-            DEBUG "!!! failed to create directory $reseller_tempdir: " . Dumper $err;
+            ERR "failed to create directory $reseller_tempdir: " . Dumper $err;
         }
 
         NGCP::CDR::Export::write_file(
@@ -314,6 +336,7 @@ sub write_wrap {
         );
         $rec_idx -= $recs;
         delete($reseller_file_data{$reseller});
+        $reseller_file_counts{$reseller}++;
 
     } while($rec_idx > 0);
 
@@ -322,7 +345,7 @@ sub write_wrap {
         my $src = "$reseller_tempdir/$file";
         my $dst = confval('DESTDIR') . "/$reseller_dname/$file";
         if(-f $src) {
-            DEBUG "### moving $src to $dst\n";
+            DEBUG "moving $src to $dst\n";
             my $err;
             -d confval('DESTDIR') . "/$reseller_dname" || 
                 File::Path::make_path(confval('DESTDIR') . "/$reseller_dname", {
@@ -332,12 +355,12 @@ sub write_wrap {
                     }
                 );
             if(defined $err && @$err) {
-                DEBUG "!!! failed to create directory $reseller_dname: " . Dumper $err;
+                ERR "failed to create directory $reseller_dname: " . Dumper $err;
             }
             unless(move($src, $dst)) {
-                DEBUG "!!! failed to move $src to $dst: $!\n";
+                ERR "failed to move $src to $dst: $!\n";
             } else {
-                DEBUG "### successfully moved $src to final destination $dst\n";
+                DEBUG "successfully moved $src to final destination $dst\n";
             }
             NGCP::CDR::Export::chownmod($dst, confval('FILES_OWNER'),
                 confval('FILES_GROUP'), oct(666),
@@ -367,6 +390,8 @@ sub write_wrap {
 }
 
 sub finish {
+    ilog('info', 'Finalizing output files');
+
 	my @resellers = keys %reseller_lines;
 	for my $reseller (@resellers) {
 	    write_wrap($reseller, 1);
@@ -390,7 +415,28 @@ sub update_export_status {
 }
 
 sub commit {
+    ilog('info', 'Committing changes to database');
 	$dbh->commit or die("failed to commit db changes: " . $dbh->errstr);
+    ilog('info', 'All done');
+}
+
+sub start_log {
+        closelog();
+        my $ident = confval("SYSLOG_IDENT") || $0;
+        $ident =~ s/.*\///; # truncate path
+        my $facl = confval("SYSLOG_FACILITY") || 'daemon';
+        openlog($ident, 'pid,ndelay', $facl);
+
+        $SIG{__WARN__} = sub { syslog('warning', @_); };
+        $SIG{__DIE__} = sub { syslog('crit', @_); die(@_); };
+}
+
+sub ilog {
+        syslog(@_);
+}
+
+INIT {
+        start_log();
 }
 
 1;
