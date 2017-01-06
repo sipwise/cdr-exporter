@@ -77,7 +77,7 @@ sub callback {
             my $ids = $filter{$k} // [];
             if(@{ $ids }) {
                 my $old_id = pop @{ $ids };
-                say "... id $id is an update event of id $old_id, merge";
+                ilog('debug', "... id $id is an update event of id $old_id, merge");
                 delete $lines{$old_id};
 		$res_id and delete $res_lines{$res_id}{$old_id};
                 push @filter_ids, $old_id;
@@ -99,7 +99,7 @@ sub callback {
             my $ids = $filter{$k} // [];
             if(@{ $ids }) {
                 my $old_id = pop @{ $ids };
-                say "... id $id is an end event of id $old_id, filter";
+                ilog('debug', "... id $id is an end event of id $old_id, filter");
                 push @filter_ids, ($id, $old_id);
                 delete $lines{$old_id};
 		$res_id and delete $res_lines{$res_id}{$old_id};
