@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (5.1.1.1+0~mr5.1.1.1) unstable; urgency=medium
+
+  [ Alexander Lutay ]
+  * [a1cb9ca] TT#10254 Fix shellcheck warnings for cdr-md5.sh
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 15 Feb 2017 20:12:47 +0100
+
 ngcp-cdr-exporter (5.1.1.0+0~mr5.1.1.0) unstable; urgency=medium
 
   [ Richard Fuchs ]
