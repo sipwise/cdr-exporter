@@ -1,3 +1,13 @@
+ngcp-cdr-exporter (1.20.4.1+0~mr4.5.4.1) unstable; urgency=medium
+
+  [ Gerhard Jungwirth ]
+  * [cf0e566] MT#22467 make separator configurable
+  * [34132fd] MT#22467 configurable csv_separator for events
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 27 Feb 2017 21:22:45 +0100
+
 ngcp-cdr-exporter (1.20.4.0+0~mr4.5.4.0) unstable; urgency=medium
 
   [ Rene Krenn ]
