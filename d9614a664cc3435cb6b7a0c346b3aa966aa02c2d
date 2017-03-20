@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a245df4_47f8aee5",
+        "filename": "debian/dirs",
+        "patchSetId": 4
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2017-03-20T14:56:32Z",
+      "side": 1,
+      "message": "Neither the cron.d and the perl5 should be needed here, as those should be created by debhelper itself.",
+      "revId": "d9614a664cc3435cb6b7a0c346b3aa966aa02c2d",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a245df4_a7dc0a76",
+        "filename": "debian/rules",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2017-03-20T14:56:32Z",
+      "side": 1,
+      "message": "Do both cron files end up being installed correctly?",
+      "revId": "d9614a664cc3435cb6b7a0c346b3aa966aa02c2d",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
