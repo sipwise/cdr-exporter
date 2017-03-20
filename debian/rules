@@ -1,34 +1,11 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
-# Sample debian/rules that uses debhelper.
-# This file was originally written by Joey Hess and Craig Small.
-# As a special exception, when this file is copied by dh-make into a
-# dh-make output file, you may use that output file without restriction.
-# This special exception was added by Craig Small in version 0.37 of dh-make.
-
 # Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+# export DH_VERBOSE=1
 
-build: build-stamp
+%:
+	dh $@
 
-build-stamp:
-	dh_testdir
-	#cd docs && make && cd ..
-	touch $@
-
-clean:
-	dh_testdir
-	dh_testroot
-	rm -f build-stamp
-	#cd docs && make clean && cd ..
-	dh_clean
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean -k
-	dh_installdirs usr/sbin etc/cron.d etc/ngcp-cdr-exporter usr/share/perl5
-
+override_dh_auto_install:
 	install -m 755 cdr-md5.sh          debian/ngcp-cdr-exporter/usr/sbin/cdr-md5
 	install -m 755 cdr-exporter.pl     debian/ngcp-cdr-exporter/usr/sbin/cdr-exporter
 	install -m 644 cdr-exporter.cron   debian/ngcp-cdr-exporter/etc/cron.d/ngcp-cdr-exporter
@@ -36,31 +13,4 @@ install: build
 	install -m 755 event-exporter.pl   debian/ngcp-cdr-exporter/usr/sbin/event-exporter
 	install -m 644 event-exporter.cron debian/ngcp-cdr-exporter/etc/cron.d/ngcp-event-exporter
 	install -m 644 event-exporter.conf debian/ngcp-cdr-exporter/etc/ngcp-cdr-exporter/event-exporter.conf
-	cp -r NGCP debian/ngcp-cdr-exporter/usr/share/perl5/
-
-# Build architecture-dependent files here.
-binary-arch: build install
-# We have nothing to do by default.
-
-# Build architecture-independent files here.
-binary-indep: build install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs
-	dh_installdocs
-	dh_installexamples
-	#dh_installman docs/rate-o-mat.8
-#	dh_installinit --name=cdr-exporter
-	dh_link
-	dh_strip
-	dh_compress
-	dh_fixperms
-	dh_perl
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install
+	dh_auto_install
