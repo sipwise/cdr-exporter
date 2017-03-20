@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba1f61a0_e851a8d9",
+        "filename": "debian/rules",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1000001
+      },
+      "writtenOn": "2017-03-20T12:18:06Z",
+      "side": 1,
+      "message": "shouldn\u0027t we use .install file?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 102
+      },
+      "revId": "596f8185dd4835159911a1f10f6dbafbd97186c8",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
