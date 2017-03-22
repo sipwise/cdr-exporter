@@ -1,3 +1,15 @@
+ngcp-cdr-exporter (5.3.0.0+0~mr5.3.0.0) unstable; urgency=medium
+
+  [ Alexander Lutay ]
+  * [fc01d12] TT#10254 Fix shellcheck warnings for cdr-md5.sh
+
+  [ Victor Seva ]
+  * [b112636] TT#5420 debian: refresh debian packaging
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 22 Mar 2017 10:46:44 +0100
+
 ngcp-cdr-exporter (5.2.0.0+0~mr5.2.0.0) unstable; urgency=medium
 
   [ Richard Fuchs ]
