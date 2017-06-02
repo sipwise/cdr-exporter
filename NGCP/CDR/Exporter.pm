@@ -153,6 +153,10 @@ sub get_config {
 	    $d =~ s/^\s*\'//g; $d =~ s/\'\s*//;
 	    push @conditions, { $a => { $c => $d } };
 	}
+
+    if ((confval("MAINTENANCE") // 'no') eq 'yes') {
+            exit(0);
+    }
 }
 
 
