@@ -56,9 +56,9 @@ sub callback {
     my $sep = confval('CSV_SEP');
     my @head = @{ $row }[0 .. 5];
     my ($id, $sub_id, $res_id, $type, $old, $new) = @head;
-    my @fields = map {defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes } (@{ $row }[6 .. @{ $row }-1]);
+    my @fields = map { quote_field($_); } (@{ $row }[6 .. @{ $row }-1]);
     my $line = join "$sep", @fields;
-    my $reseller_line = join "$sep", map {defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes }(@$res_row);
+    my $reseller_line = join "$sep", map { quote_field($_); } (@$res_row);
 
     if(confval('FILTER_FLAPPING')) {
         if($type =~ /^start_(.+)$/) {
@@ -79,7 +79,7 @@ sub callback {
                 my $old_id = pop @{ $ids };
                 ilog('debug', "... id $id is an update event of id $old_id, merge");
                 delete $lines{$old_id};
-		$res_id and delete $res_lines{$res_id}{$old_id};
+                $res_id and delete $res_lines{$res_id}{$old_id};
                 push @filter_ids, $old_id;
                 $line =~ s/\"update_/\"start_/;
                 $reseller_line =~ s/\"update_/\"start_/;
@@ -102,7 +102,7 @@ sub callback {
                 ilog('debug', "... id $id is an end event of id $old_id, filter");
                 push @filter_ids, ($id, $old_id);
                 delete $lines{$old_id};
-		$res_id and delete $res_lines{$res_id}{$old_id};
+                $res_id and delete $res_lines{$res_id}{$old_id};
                 $filter{$k} = $ids;
             } else {
                 $lines{$id} = $line;
@@ -121,17 +121,17 @@ sub callback {
 
 my @vals = map { $lines{$_} } sort { int($a) <=> int($b) } keys %lines;
 for my $val (@vals) {
-	write_reseller('system', $val);
+    write_reseller('system', $val);
 }
 for my $res (keys(%res_lines)) {
-	my $res_lines = $res_lines{$res};
-	my @ids = keys(%$res_lines);
-	@ids = sort {$a <=> $b} (@ids);
-	for my $id (@ids) {
-		my $val = $res_lines->{$id};
-		$val or next;
-		write_reseller_id($res, $val);
-	}
+    my $res_lines = $res_lines{$res};
+    my @ids = keys(%$res_lines);
+    @ids = sort {$a <=> $b} (@ids);
+    for my $id (@ids) {
+        my $val = $res_lines->{$id};
+        $val or next;
+        write_reseller_id($res, $val);
+    }
 }
 
 NGCP::CDR::Exporter::finish();

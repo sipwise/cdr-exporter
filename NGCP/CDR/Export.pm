@@ -29,13 +29,13 @@ sub set_mark {
     my $i = $dbh->prepare("insert into accounting.mark (collector, acc_id) values(?,?)");
     my $u = $dbh->prepare("update accounting.mark set acc_id = ? where collector = ?");
     for my $mk (keys %{ $mark }) {
-            $s->execute("$name-$mk") or die($dbh->errstr);
-            my $r = $s->fetch;
-            if($r && defined $r->[0]) {
-                $u->execute($mark->{$mk}, "$name-$mk");
-            } else {
-                $i->execute("$name-$mk", $mark->{$mk});
-            }
+        $s->execute("$name-$mk") or die($dbh->errstr);
+        my $r = $s->fetch;
+        if($r && defined $r->[0]) {
+            $u->execute($mark->{$mk}, "$name-$mk");
+        } else {
+            $i->execute("$name-$mk", $mark->{$mk});
+        }
     }
 }
 
@@ -81,7 +81,7 @@ sub get_missing_resellers {
 
 sub get_ts_for_filename {
     my ($xnow) = @_;
-    
+
     my $now; my @now;
 
     if(defined $xnow) {
@@ -90,20 +90,20 @@ sub get_ts_for_filename {
         $now = time;
         @now = localtime($now);
     }
-    return sprintf('%04i%02i%02i%02i%02i%02i', 
+    return sprintf('%04i%02i%02i%02i%02i%02i',
         $now[5] + 1900, $now[4] + 1, @now[3,2,1,0]);
 }
 
 sub chownmod {
-	my ($file, $user, $group, $defmode, $mask) = @_;
+    my ($file, $user, $group, $defmode, $mask) = @_;
 
-	if ($user || $group) {
-		my @arg = (-1, -1, $file);
-		$user and ($arg[0] = (getpwnam($user) || -1));
-		$group and ($arg[1] = (getgrnam($group) || -1));
-		chown(@arg);
-	}
-	$mask and chmod($defmode & ~oct($mask), $file);
+    if ($user || $group) {
+        my @arg = (-1, -1, $file);
+        $user and ($arg[0] = (getpwnam($user) || -1));
+        $group and ($arg[1] = (getgrnam($group) || -1));
+        chown(@arg);
+    }
+    $mask and chmod($defmode & ~oct($mask), $file);
 }
 
 sub write_file {
@@ -120,11 +120,11 @@ sub write_file {
 
     my $num = @{ $lines };
     if ($format eq 'kabelplus') {
-            unshift(@{ $lines }, "'$num'". ',' x 15 ."'hdr',,,'".($$file_data[0]//'')."','".($$file_data[1]//'')."',,,'".($$file_data[2]//'')."'," .
-			        "'".($$file_data[3]//'')."','".($$file_data[4]//'')."'". ',' x 10);
+        unshift(@{ $lines }, "'$num'". ',' x 15 ."'hdr',,,'".($$file_data[0]//'')."','".($$file_data[1]//'')."',,,'".($$file_data[2]//'')."'," .
+                "'".($$file_data[3]//'')."','".($$file_data[4]//'')."'". ',' x 10);
     }
     else {
-            unshift(@{ $lines }, sprintf('%s,%04i', $version, $num));
+        unshift(@{ $lines }, sprintf('%s,%04i', $version, $num));
     }
 
     my $nl = "\n";
@@ -138,10 +138,10 @@ sub write_file {
 
     my $md5 = $ctx->hexdigest;
     if ($format eq 'kabelplus') {
-            print $fd (",,'$md5'". ',' x 13 ."'md5'". ',' x 19 . "$nl");
+        print $fd (",,'$md5'". ',' x 13 ."'md5'". ',' x 19 . "$nl");
     }
     else {
-            print $fd ("$md5$nl");
+        print $fd ("$md5$nl");
     }
 
     NGCP::CDR::Exporter::DEBUG("$num data lines written to $tfn, checksum is $md5\n");
@@ -154,5 +154,3 @@ sub write_file {
 
 1;
 # vim: set tabstop=4 expandtab:
-
-

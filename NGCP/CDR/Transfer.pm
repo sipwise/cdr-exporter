@@ -31,7 +31,7 @@ sub sftp {
         user => $user,
         password => $pass,
         timeout => 3,
-	#password_prompt => qr/password:/,
+    #password_prompt => qr/password:/,
     );
     if($sftp->error) {
         die "+++ failed to transfer $src to $user\@$host:$port/$dir: " . $sftp->error . "\n";

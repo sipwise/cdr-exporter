@@ -16,9 +16,9 @@ use Data::Dumper;
 use Sys::Syslog;
 
 BEGIN {
-	require Exporter;
-	our @ISA = qw(Exporter);
-	our @EXPORT = qw(DEBUG confval write_reseller write_reseller_id update_export_status ilog);
+    require Exporter;
+    our @ISA = qw(Exporter);
+    our @EXPORT = qw(DEBUG confval quote_field write_reseller write_reseller_id update_export_status ilog);
 }
 
 our $debug = 0;
@@ -85,25 +85,25 @@ sub config2array {
 }
 
 sub get_config_fields {
-        my ($name) = @_;
-        my @ret;
-        foreach my $f(config2array($name)) {
-                $f or next;
-                $f =~ s/^#.+//; next unless($f);
-                $f =~ s/^\'//; $f =~ s/\'$//;
-                push @ret, $f;
-        }
-        return @ret;
+    my ($name) = @_;
+    my @ret;
+    foreach my $f(config2array($name)) {
+        $f or next;
+        $f =~ s/^#.+//; next unless($f);
+        $f =~ s/^\'//; $f =~ s/\'$//;
+        push @ret, $f;
+    }
+    return @ret;
 }
 
 sub get_config {
-	my ($coll, $cf, $conf_upd) = @_;
+    my ($coll, $cf, $conf_upd) = @_;
 
-	$collid = $coll;
+    $collid = $coll;
 
-	for my $key (%$conf_upd) {
-		$config{'default.' . $key} = $$conf_upd{$key};
-	}
+    for my $key (%$conf_upd) {
+        $config{'default.' . $key} = $$conf_upd{$key};
+    }
 
     my $config_file;
     foreach my $cp(@config_paths) {
@@ -112,47 +112,47 @@ sub get_config {
             last;
         }
     }
-	die "Config file $cf not found in path " . (join " or ", @config_paths) . "\n"
-	    unless $config_file;
+    die "Config file $cf not found in path " . (join " or ", @config_paths) . "\n"
+        unless $config_file;
 
-	Config::Simple->import_from("$config_file" , \%config) or
-	    die "Couldn't open the configuration file '$config_file'.\n";
+    Config::Simple->import_from("$config_file" , \%config) or
+        die "Couldn't open the configuration file '$config_file'.\n";
 
-	# backwards compat
-	$config{'default.DESTDIR'} //= $config{'default.CDRDIR'} // $config{'default.EDRDIR'};
+    # backwards compat
+    $config{'default.DESTDIR'} //= $config{'default.CDRDIR'} // $config{'default.EDRDIR'};
 
     start_log();
 
-	die "Invalid destination directory '".$config{'default.DESTDIR'}."'\n"
-	    unless(-d $config{'default.DESTDIR'});
+    die "Invalid destination directory '".$config{'default.DESTDIR'}."'\n"
+        unless(-d $config{'default.DESTDIR'});
 
     @admin_fields = get_config_fields('ADMIN_EXPORT_FIELDS');
     @reseller_fields = get_config_fields('RESELLER_EXPORT_FIELDS');
     @data_fields = get_config_fields('DATA_FIELDS');
 
-	foreach my $f(get_config_fields('EXPORT_JOINS')) {
-	    $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
-	    my ($a, $b) = split(/\s*=>\s*{\s*/, $f);
-	    $a =~ s/^\s*\'//; $a =~ s/\'$//g;
-	    $b =~ s/\s*\}\s*$//;
-	    my ($c, $d) = split(/\s*=>\s*/, $b);
-	    $c =~ s/^\s*\'//g; $c =~ s/\'\s*//;
-	    $d =~ s/^\s*\'//g; $d =~ s/\'\s*//;
-	    push @joins, { $a => { $c => $d } };
-	}
+    foreach my $f(get_config_fields('EXPORT_JOINS')) {
+        $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
+        my ($a, $b) = split(/\s*=>\s*{\s*/, $f);
+        $a =~ s/^\s*\'//; $a =~ s/\'$//g;
+        $b =~ s/\s*\}\s*$//;
+        my ($c, $d) = split(/\s*=>\s*/, $b);
+        $c =~ s/^\s*\'//g; $c =~ s/\'\s*//;
+        $d =~ s/^\s*\'//g; $d =~ s/\'\s*//;
+        push @joins, { $a => { $c => $d } };
+    }
 
-	foreach my $f(get_config_fields('EXPORT_CONDITIONS')) {
-	    next unless($f);
-	    $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
-	    my ($a, $b) = split(/\s*=>\s*{\s*/, $f);
-	    $a =~ s/^\s*\'//; $a =~ s/\'$//g;
-	    $b =~ s/\s*\}\s*$//;
+    foreach my $f(get_config_fields('EXPORT_CONDITIONS')) {
+        next unless($f);
+        $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
+        my ($a, $b) = split(/\s*=>\s*{\s*/, $f);
+        $a =~ s/^\s*\'//; $a =~ s/\'$//g;
+        $b =~ s/\s*\}\s*$//;
 
-	    my ($c, $d) = split(/\s*=>\s*/, $b);
-	    $c =~ s/^\s*\'//g; $c =~ s/\'\s*//;
-	    $d =~ s/^\s*\'//g; $d =~ s/\'\s*//;
-	    push @conditions, { $a => { $c => $d } };
-	}
+        my ($c, $d) = split(/\s*=>\s*/, $b);
+        $c =~ s/^\s*\'//g; $c =~ s/\'\s*//;
+        $d =~ s/^\s*\'//g; $d =~ s/\'\s*//;
+        push @conditions, { $a => { $c => $d } };
+    }
 
     if ((confval("MAINTENANCE") // 'no') eq 'yes') {
             exit(0);
@@ -165,106 +165,146 @@ sub confval {
     return $config{'default.' . $val};
 }
 
+sub quote_field {
+    my ($field) = @_;
+    my $sep = confval('CSV_SEP');
+    my $quotes = confval('QUOTES');
+    my $escape_symbol = confval('ESCAPE_SYMBOL'); # // '//';
+    if (defined $quotes and length($quotes) > 0) {
+        if (defined $escape_symbol and length($escape_symbol) > 0) {
+            if (defined $field and length($field) > 0) {
+                foreach my $escape ($escape_symbol,$quotes) {
+                    $field =~ s/($escape)/$escape_symbol$1/g;
+                }
+            } else {
+                $field = $quotes . $quotes;
+            }
+        } else {
+            if (defined $field and length($field) > 0) {
+                $field = $quotes . $field . $quotes;
+            } else {
+                $field = $quotes . $quotes;
+            }
+        }
+    } else {
+        if (defined $escape_symbol and length($escape_symbol) > 0) {
+            if (defined $field and length($field) > 0) {
+                foreach my $escape ($escape_symbol,$sep) {
+                    $field =~ s/($escape)/$escape_symbol$1/g;
+                }
+            } else {
+                $field = '';
+            }
+        } else {
+            if (not defined $field or length($field) == 0) {
+                $field = '';
+            }
+        }
+    }
+    return $field;
+
+}
+
 sub extract_field_positions {
     my (@fields) = @_;
-	# extract positions of data fields from admin fields
-	my %index;
+    # extract positions of data fields from admin fields
+    my %index;
     my @positions;
-	@index{@admin_fields} = (0..$#admin_fields);
-	for(my $i = 0; $i < @fields; $i++) {
-	    my $name = $fields[$i];
-	    if (! exists $index{$name}) {
-                push(@admin_fields, $name);
-                push(@positions, $#admin_fields);
-	    }
-        else {
-                push @positions, $index{$name};
+    @index{@admin_fields} = (0..$#admin_fields);
+    for(my $i = 0; $i < @fields; $i++) {
+        my $name = $fields[$i];
+        if (! exists $index{$name}) {
+            push(@admin_fields, $name);
+            push(@positions, $#admin_fields);
         }
-	}
+        else {
+            push @positions, $index{$name};
+        }
+    }
     return @positions;
 };
 
 sub prepare_dbh {
-	my ($trailer, $table) = @_;
+    my ($trailer, $table) = @_;
 
-	$dbh = DBI->connect("dbi:mysql:" . confval('DBDB') .
-		";host=".confval('DBHOST'),
-		confval('DBUSER'), confval('DBPASS'))
-	    or die "failed to connect to db: $DBI::errstr";
+    $dbh = DBI->connect("dbi:mysql:" . confval('DBDB') .
+        ";host=".confval('DBHOST'),
+        confval('DBUSER'), confval('DBPASS'))
+        or die "failed to connect to db: $DBI::errstr";
 
-	$dbh->{mysql_auto_reconnect} = 1;
-	$dbh->{AutoCommit} = 0;
+    $dbh->{mysql_auto_reconnect} = 1;
+    $dbh->{AutoCommit} = 0;
 
-	my @intjoins = ();
-	foreach my $f(@joins) {
-	    my ($table, $keys) = %{ $f };
-	    my ($foreign_key, $own_key) = %{ $keys };
-	    push @intjoins, "left outer join $table on $foreign_key = $own_key";
-	}
-	my @conds = ();
-	foreach my $f(@conditions) {
-	    my ($field, $match) = %{ $f };
-	    my ($op, $val) = %{ $match };
-	    push @conds, "$field $op $val";
-	}
-	my @trail = ();
-	foreach my $f(@$trailer) {
-	    my ($key, $val) = %{ $f };
-	    push @trail, "$key $val";
-	}
+    my @intjoins = ();
+    foreach my $f(@joins) {
+        my ($table, $keys) = %{ $f };
+        my ($foreign_key, $own_key) = %{ $keys };
+        push @intjoins, "left outer join $table on $foreign_key = $own_key";
+    }
+    my @conds = ();
+    foreach my $f(@conditions) {
+        my ($field, $match) = %{ $f };
+        my ($op, $val) = %{ $match };
+        push @conds, "$field $op $val";
+    }
+    my @trail = ();
+    foreach my $f(@$trailer) {
+        my ($key, $val) = %{ $f };
+        push @trail, "$key $val";
+    }
 
     $last_admin_field = $#admin_fields;
     @reseller_positions = extract_field_positions(@reseller_fields);
     @data_positions = extract_field_positions(@data_fields);
 
-	$q = "select " .
-	    join(", ", @admin_fields) . " from $table " .
-	    join(" ", @intjoins) . " " .
-	    "where " . join(" and ", @conds) . " " .
-	    join(" ", @trail);
+    $q = "select " .
+        join(", ", @admin_fields) . " from $table " .
+        join(" ", @intjoins) . " " .
+        "where " . join(" and ", @conds) . " " .
+        join(" ", @trail);
 
-	DEBUG $q if $debug;
+    DEBUG $q if $debug;
 
 }
 
 sub prepare_output {
-	$tempdir = File::Temp->newdir;
+    $tempdir = File::Temp->newdir;
 
-	my $now = time();
-	my @now = localtime($now);
-	$file_ts = NGCP::CDR::Export::get_ts_for_filename(\@now);
+    my $now = time();
+    my @now = localtime($now);
+    $file_ts = NGCP::CDR::Export::get_ts_for_filename(\@now);
 
-	my $full_name = (defined confval('FULL_NAMES') && confval('FULL_NAMES') eq "yes" ? 1 : 0);
-	my $monthly_dir = (defined confval('MONTHLY_DIR') && confval('MONTHLY_DIR') eq "yes" ? 1 : 0);
-	my $daily_dir = (defined confval('DAILY_DIR') && confval('DAILY_DIR') eq "yes" ? 1 : 0);
-	$dname = "";
-	if($monthly_dir && !$daily_dir) {
-	    $dname .= sprintf("%04i%02i", $now[5] + 1900, $now[4] + 1);
-	    $full_name or $file_ts = sprintf("%02i%02i%02i%02i", @now[3,2,1,0]);
-	} elsif(!$monthly_dir && $daily_dir) {
-	    $dname .= sprintf("%04i%02i%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
-	    $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
-	} elsif($monthly_dir && $daily_dir) {
-	    $dname .= sprintf("%04i%02i/%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
-	    $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
-	}
+    my $full_name = (defined confval('FULL_NAMES') && confval('FULL_NAMES') eq "yes" ? 1 : 0);
+    my $monthly_dir = (defined confval('MONTHLY_DIR') && confval('MONTHLY_DIR') eq "yes" ? 1 : 0);
+    my $daily_dir = (defined confval('DAILY_DIR') && confval('DAILY_DIR') eq "yes" ? 1 : 0);
+    $dname = "";
+    if($monthly_dir && !$daily_dir) {
+        $dname .= sprintf("%04i%02i", $now[5] + 1900, $now[4] + 1);
+        $full_name or $file_ts = sprintf("%02i%02i%02i%02i", @now[3,2,1,0]);
+    } elsif(!$monthly_dir && $daily_dir) {
+        $dname .= sprintf("%04i%02i%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
+        $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
+    } elsif($monthly_dir && $daily_dir) {
+        $dname .= sprintf("%04i%02i/%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
+        $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
+    }
 }
 
 sub run {
-	my ($cb) = @_;
+    my ($cb) = @_;
 
     ilog('info', 'Started execution');
 
     my $rec_in = 0;
-	my $sth = $dbh->prepare($q);
-	$sth->execute();
-	while(my $row = $sth->fetchrow_arrayref) {
+    my $sth = $dbh->prepare($q);
+    $sth->execute();
+    while(my $row = $sth->fetchrow_arrayref) {
         $rec_in++;
         my @admin_row = @$row[0 .. $last_admin_field];
-		my @res_row = @$row[@reseller_positions];
+        my @res_row = @$row[@reseller_positions];
         my @data_row = @$row[@data_positions];
-		$cb->(\@admin_row, \@res_row, \@data_row);
-	}
+        $cb->(\@admin_row, \@res_row, \@data_row);
+    }
 
     for my $key (keys(%reseller_counts)) {
             ilog('info', "Wrote $reseller_counts{$key} records for reseller $key");
@@ -277,20 +317,20 @@ sub run {
 }
 
 sub write_reseller {
-	my ($reseller, $line, $callback, $callback_arg) = @_;
-	push(@{$reseller_lines{$reseller}}, $line);
+    my ($reseller, $line, $callback, $callback_arg) = @_;
+    push(@{$reseller_lines{$reseller}}, $line);
     $callback and $callback->($callback_arg, \$reseller_file_data{$reseller});
     $reseller_counts{$reseller}++;
-	write_wrap($reseller);
+    write_wrap($reseller);
 }
 
 sub write_reseller_id {
-	my ($id, $line, $callback, $callback_arg) = @_;
-        if(!exists $reseller_names{$id}) {
-            $reseller_names{$id} = NGCP::CDR::Export::get_reseller_name($dbh, $id);
-            $reseller_ids{$reseller_names{$id}} = $id;
-        }
-        write_reseller($reseller_names{$id}, $line, $callback, $callback_arg);
+    my ($id, $line, $callback, $callback_arg) = @_;
+    if(!exists $reseller_names{$id}) {
+        $reseller_names{$id} = NGCP::CDR::Export::get_reseller_name($dbh, $id);
+        $reseller_ids{$reseller_names{$id}} = $id;
+    }
+    write_reseller($reseller_names{$id}, $line, $callback, $callback_arg);
 }
 
 sub write_wrap {
@@ -306,11 +346,11 @@ sub write_wrap {
     my $mark_query = undef;
     unless($reseller eq "system") {
         $reseller_contract_id = "-".$reseller_ids{$reseller};
-	$mark_query = [ $reseller_ids{$reseller} ];
+        $mark_query = [ $reseller_ids{$reseller} ];
     }
     if (!defined($mark{"lastseq".$reseller_contract_id})) {
         my $tmpmark = NGCP::CDR::Export::get_mark($dbh, $collid, $mark_query);
-	%mark = ( %mark, %$tmpmark );
+        %mark = ( %mark, %$tmpmark );
         $mark{"lastseq".$reseller_contract_id} //= 0;
     }
     my $file_idx = $mark{"lastseq".$reseller_contract_id} // 0;
@@ -351,7 +391,7 @@ sub write_wrap {
         if(-f $src) {
             DEBUG "moving $src to $dst\n";
             my $err;
-            -d confval('DESTDIR') . "/$reseller_dname" || 
+            -d confval('DESTDIR') . "/$reseller_dname" ||
                 File::Path::make_path(confval('DESTDIR') . "/$reseller_dname", {
                         error => \$err,
                         user => confval('FILES_OWNER'),
@@ -396,51 +436,51 @@ sub write_wrap {
 sub finish {
     ilog('info', 'Finalizing output files');
 
-	my @resellers = keys %reseller_lines;
-	for my $reseller (@resellers) {
-	    write_wrap($reseller, 1);
-	}
+    my @resellers = keys %reseller_lines;
+    for my $reseller (@resellers) {
+        write_wrap($reseller, 1);
+    }
 
-	# we write empty cdrs for resellers which didn't have a call during this
-	# export run, so get them into the list
-	my $missing_resellers = NGCP::CDR::Export::get_missing_resellers($dbh, [ keys %reseller_names ]);
-	for(my $i = 0; $i < @{ $missing_resellers->{names} }; ++$i) {
-	    my $name = $missing_resellers->{names}->[$i];
-	    my $id = $missing_resellers->{ids}->[$i];
-	    push @resellers, $name;
-	    $reseller_ids{$name} = $id;
-	    $reseller_names{$id} = $name;
-	    write_wrap($name, 2);
-	}
+    # we write empty cdrs for resellers which didn't have a call during this
+    # export run, so get them into the list
+    my $missing_resellers = NGCP::CDR::Export::get_missing_resellers($dbh, [ keys %reseller_names ]);
+    for(my $i = 0; $i < @{ $missing_resellers->{names} }; ++$i) {
+        my $name = $missing_resellers->{names}->[$i];
+        my $id = $missing_resellers->{ids}->[$i];
+        push @resellers, $name;
+        $reseller_ids{$name} = $id;
+        $reseller_names{$id} = $name;
+        write_wrap($name, 2);
+    }
 }
 
 sub update_export_status {
-	NGCP::CDR::Export::update_export_status($dbh, @_);
+    NGCP::CDR::Export::update_export_status($dbh, @_);
 }
 
 sub commit {
     ilog('info', 'Committing changes to database');
-	$dbh->commit or die("failed to commit db changes: " . $dbh->errstr);
+    $dbh->commit or die("failed to commit db changes: " . $dbh->errstr);
     ilog('info', 'All done');
 }
 
 sub start_log {
-        closelog();
-        my $ident = confval("SYSLOG_IDENT") || $0;
-        $ident =~ s/.*\///; # truncate path
-        my $facl = confval("SYSLOG_FACILITY") || 'daemon';
-        openlog($ident, 'pid,ndelay', $facl);
+    closelog();
+    my $ident = confval("SYSLOG_IDENT") || $0;
+    $ident =~ s/.*\///; # truncate path
+    my $facl = confval("SYSLOG_FACILITY") || 'daemon';
+    openlog($ident, 'pid,ndelay', $facl);
 
-        $SIG{__WARN__} = sub { syslog('warning', @_); }; ## no critic
-        $SIG{__DIE__} = sub { syslog('crit', @_); die(@_); }; ## no critic
+    $SIG{__WARN__} = sub { syslog('warning', @_); }; ## no critic
+    $SIG{__DIE__} = sub { syslog('crit', @_); die(@_); }; ## no critic
 }
 
 sub ilog {
-        syslog(@_);
+    syslog(@_);
 }
 
 INIT {
-        start_log();
+    start_log();
 }
 
 1;
