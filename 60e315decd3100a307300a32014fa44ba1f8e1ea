@@ -33,6 +33,24 @@
       "revId": "60e315decd3100a307300a32014fa44ba1f8e1ea",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a930d6b_317ea8e5",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2018-01-30T16:03:38Z",
+      "side": 1,
+      "message": "example string:\n\nblah\\narf\u0027foo\n\nnow escaping single quotes using backslash escape char:\n\n  -\u003efirst pass:\n\nblah\\\\narf\u0027foo\n\n  -\u003esecond pass:\n\nblah\\\\narf\\\u0027foo",
+      "parentUuid": "1a930d6b_f14500b4",
+      "revId": "60e315decd3100a307300a32014fa44ba1f8e1ea",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
     }
   ]
 }
