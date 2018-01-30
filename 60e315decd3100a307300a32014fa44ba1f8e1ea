@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a930d6b_311788a5",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2018-01-30T15:59:27Z",
+      "side": 1,
+      "message": "no-op. can be removed",
+      "revId": "60e315decd3100a307300a32014fa44ba1f8e1ea",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a930d6b_f14500b4",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2018-01-30T15:59:27Z",
+      "side": 1,
+      "message": "for my understanding: this escapes the escape symbol and the quotes",
+      "revId": "60e315decd3100a307300a32014fa44ba1f8e1ea",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
