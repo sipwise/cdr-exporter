@@ -18,7 +18,7 @@ use Sys::Syslog;
 BEGIN {
 	require Exporter;
 	our @ISA = qw(Exporter);
-	our @EXPORT = qw(DEBUG confval write_reseller write_reseller_id update_export_status ilog);
+	our @EXPORT = qw(DEBUG confval quote_field write_reseller write_reseller_id update_export_status ilog);
 }
 
 our $debug = 0;
@@ -163,6 +163,48 @@ sub get_config {
 sub confval {
     my ($val) = @_;
     return $config{'default.' . $val};
+}
+
+sub quote_field {
+    my ($field) = @_;
+	my $sep = confval('CSV_SEP');
+    my $quotes = confval('QUOTES');
+	my $escape_symbol = confval('ESCAPE_SYMBOL'); # // '//';
+    if (defined $quotes and length($quotes) > 0) {
+		if (defined $escape_symbol and length($escape_symbol) > 0) {
+			if (defined $field and length($field) > 0) {
+				my $replacement = $escape_symbol . $quotes;
+				foreach my $escape ($escape_symbol,$quotes) {
+					$field =~ s/($escape)/$escape_symbol$1/g;
+				}
+			} else {
+				$field = $quotes . $quotes;
+			}
+		} else {
+			if (defined $field and length($field) > 0) {
+				$field = $quotes . $field . $quotes;
+			} else {
+				$field = $quotes . $quotes;
+			}
+		}
+    } else {
+		if (defined $escape_symbol and length($escape_symbol) > 0) {
+			if (defined $field and length($field) > 0) {
+				my $replacement = $escape_symbol . $sep;
+				foreach my $escape ($escape_symbol,$sep) {
+					$field =~ s/($escape)/$escape_symbol$1/g;
+				}
+			} else {
+				$field = '';
+			}
+		} else {
+			if (not defined $field or length($field) == 0) {
+				$field = '';
+			}
+		}
+	}
+    return $field;
+
 }
 
 sub extract_field_positions {
@@ -351,7 +393,7 @@ sub write_wrap {
         if(-f $src) {
             DEBUG "moving $src to $dst\n";
             my $err;
-            -d confval('DESTDIR') . "/$reseller_dname" || 
+            -d confval('DESTDIR') . "/$reseller_dname" ||
                 File::Path::make_path(confval('DESTDIR') . "/$reseller_dname", {
                         error => \$err,
                         user => confval('FILES_OWNER'),
