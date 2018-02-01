@@ -67,7 +67,7 @@ sub callback {
     my $dst_uuid = shift @fields;
     my $src_provid = shift @fields;
     my $dst_provid = shift @fields;
-    @fields = map { defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes } (@fields);
+    @fields = map { quote_field($_); } (@fields);
 
     if(confval('EXPORT_INCOMING') eq "no" && $src_uuid eq "0") {
         push @ignored_ids, $id;
@@ -78,7 +78,7 @@ sub callback {
     write_reseller('system', $line, \&filestats_callback, $data_row);
     push(@ids, $id);
 
-    my $reseller_line = join "$sep", map { defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes } (@$res_row);
+    my $reseller_line = join "$sep", map { quote_field($_); } (@$res_row);
 
     if($src_uuid ne "0") {
 	write_reseller_id($src_provid, $reseller_line, \&filestats_callback, $data_row);

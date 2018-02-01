@@ -18,7 +18,7 @@ use Sys::Syslog;
 BEGIN {
 	require Exporter;
 	our @ISA = qw(Exporter);
-	our @EXPORT = qw(DEBUG confval write_reseller write_reseller_id update_export_status ilog);
+	our @EXPORT = qw(DEBUG confval quote_field write_reseller write_reseller_id update_export_status ilog);
 }
 
 our $debug = 0;
@@ -63,6 +63,7 @@ my %config = (
     'default.TRANSFER_REMOTE' => "/home/jail/home/cdrexport",
     'default.QUOTES' => "'",
     'default.CSV_SEP' => ',',
+    'default.CSV_ESC' => "\\",
 );
 
 sub DEBUG {
@@ -163,6 +164,49 @@ sub get_config {
 sub confval {
     my ($val) = @_;
     return $config{'default.' . $val};
+}
+
+sub quote_field {
+    my ($field) = @_;
+    my $sep = confval('CSV_SEP');
+    my $quotes = confval('QUOTES');
+    my $escape_symbol = confval('CSV_ESC');
+    if (defined $quotes and length($quotes) > 0) {
+        if (defined $escape_symbol and length($escape_symbol) > 0) {
+            if (defined $field and length($field) > 0) {
+                foreach my $escape ($escape_symbol,$quotes) {
+                    my $escape_re = quotemeta($escape); #fun
+                    $field =~ s/($escape_re)/$escape_symbol$1/g;
+                }
+                $field = $quotes . $field . $quotes;
+            } else {
+                $field = $quotes . $quotes;
+            }
+        } else {
+            if (defined $field and length($field) > 0) {
+                $field = $quotes . $field . $quotes;
+            } else {
+                $field = $quotes . $quotes;
+            }
+        }
+    } else {
+        if (defined $escape_symbol and length($escape_symbol) > 0) {
+            if (defined $field and length($field) > 0) {
+                foreach my $escape ($escape_symbol,$sep) {
+                    my $escape_re = quotemeta($escape); #fun
+                    $field =~ s/($escape_re)/$escape_symbol$1/g;
+                }
+            } else {
+                $field = '';
+            }
+        } else {
+            if (not defined $field or length($field) == 0) {
+                $field = '';
+            }
+        }
+    }
+    return $field;
+
 }
 
 sub extract_field_positions {
