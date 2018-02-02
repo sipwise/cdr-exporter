@@ -40,9 +40,10 @@ my %reseller_file_data;
 my %reseller_counts;
 my %reseller_file_counts;
 my %mark;
-my $dname;
+my $start_ts;
+my $dname_map;
 my $tempdir;
-my $file_ts;
+my $file_ts_map;
 my @reseller_positions;
 my @data_positions;
 
@@ -272,26 +273,61 @@ sub prepare_dbh {
 }
 
 sub prepare_output {
+
     $tempdir = File::Temp->newdir;
 
-    my $now = time();
-    my @now = localtime($now);
-    $file_ts = NGCP::CDR::Export::get_ts_for_filename(\@now);
+    $start_ts = time();
 
-    my $full_name = (defined confval('FULL_NAMES') && confval('FULL_NAMES') eq "yes" ? 1 : 0);
-    my $monthly_dir = (defined confval('MONTHLY_DIR') && confval('MONTHLY_DIR') eq "yes" ? 1 : 0);
-    my $daily_dir = (defined confval('DAILY_DIR') && confval('DAILY_DIR') eq "yes" ? 1 : 0);
-    $dname = "";
-    if($monthly_dir && !$daily_dir) {
-        $dname .= sprintf("%04i%02i", $now[5] + 1900, $now[4] + 1);
-        $full_name or $file_ts = sprintf("%02i%02i%02i%02i", @now[3,2,1,0]);
-    } elsif(!$monthly_dir && $daily_dir) {
-        $dname .= sprintf("%04i%02i%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
-        $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
-    } elsif($monthly_dir && $daily_dir) {
-        $dname .= sprintf("%04i%02i/%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
-        $full_name or $file_ts = sprintf("%02i%02i%02i", @now[2,1,0]);
+    $dname_map = {};
+    $file_ts_map = {};
+
+}
+
+sub get_dir_ts {
+
+    my ($reseller) = @_;
+
+    if (not exists $dname_map->{$reseller} or not exists $file_ts_map->{$reseller}) {
+
+        my @now;
+        if (defined confval('DIR_RESELLER_TIME') && confval('DIR_RESELLER_TIME') eq "yes") {
+            my $stmt;
+            my @params = ($start_ts);
+            if ($reseller eq "system") {
+                $stmt = 'select convert_tz(from_unixtime(?),@@session.time_zone,(SELECT COALESCE((SELECT t.name FROM ngcp.timezone t LIMIT 1),@@global.time_zone))) as ts';
+            } else {
+                $stmt = 'select convert_tz(from_unixtime(?),@@session.time_zone,(select coalesce((select tz.name from billing.v_contract_timezone tz where contract_id = ? limit 1),@@global.time_zone))) as ts';
+                push(@params,$reseller_ids{$reseller});
+            }
+            my $sth = $dbh->prepare('select second(start.ts),minute(start.ts),hour(start.ts),dayofmonth(start.ts),'.
+                'month(start.ts)-1,year(start.ts)-1900,dayofweek(start.ts)-1,dayofyear(start.ts)-1 from (' . $stmt . ') as start');
+            $sth->execute(@params);
+            @now = $sth->fetchrow_array;
+            $sth->finish;
+        } else {
+            @now = localtime($start_ts);
+        }
+
+        #a reseller must not have "system" as name
+        $file_ts_map->{$reseller} = NGCP::CDR::Export::get_ts_for_filename(\@now);
+        my $full_name = (defined confval('FULL_NAMES') && confval('FULL_NAMES') eq "yes" ? 1 : 0);
+        my $monthly_dir = (defined confval('MONTHLY_DIR') && confval('MONTHLY_DIR') eq "yes" ? 1 : 0);
+        my $daily_dir = (defined confval('DAILY_DIR') && confval('DAILY_DIR') eq "yes" ? 1 : 0);
+        $dname_map->{$reseller} = '';
+        if($monthly_dir && !$daily_dir) {
+            $dname_map->{$reseller} .= sprintf("%04i%02i", $now[5] + 1900, $now[4] + 1);
+            $full_name or $file_ts_map->{$reseller} = sprintf("%02i%02i%02i%02i", @now[3,2,1,0]);
+        } elsif(!$monthly_dir && $daily_dir) {
+            $dname_map->{$reseller} .= sprintf("%04i%02i%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
+            $full_name or $file_ts_map->{$reseller} = sprintf("%02i%02i%02i", @now[2,1,0]);
+        } elsif($monthly_dir && $daily_dir) {
+            $dname_map->{$reseller} .= sprintf("%04i%02i/%02i", $now[5] + 1900, $now[4] + 1, $now[3]);
+            $full_name or $file_ts_map->{$reseller} = sprintf("%02i%02i%02i", @now[2,1,0]);
+        }
     }
+
+    return ($dname_map->{$reseller},$file_ts_map->{$reseller});
+
 }
 
 sub run {
@@ -358,6 +394,7 @@ sub write_wrap {
         $mark{"lastseq".$reseller_contract_id} //= 0;
     }
     my $file_idx = $mark{"lastseq".$reseller_contract_id} // 0;
+    my ($dname,$file_ts) = get_dir_ts($reseller);
     my $reseller_dname = $reseller . "/" . $dname;
     if($reseller ne "system") {
         $reseller_dname = "resellers/$reseller_dname";
