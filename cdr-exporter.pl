@@ -78,7 +78,7 @@ sub callback {
     write_reseller('system', $line, \&filestats_callback, $data_row);
     push(@ids, $id);
 
-    my $reseller_line = join "$sep", map { defined $_ ? $quotes . $_ . $quotes : $quotes. $quotes } (@$res_row);
+    my $reseller_line = join "$sep", map { quote_field($_); } (@$res_row);
 
     if($src_uuid ne "0") {
         write_reseller_id($src_provid, $reseller_line, \&filestats_callback, $data_row);
