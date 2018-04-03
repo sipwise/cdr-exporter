@@ -1,3 +1,14 @@
+ngcp-cdr-exporter (6.3.0.0+0~mr6.3.0.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [de700e7] TT#31183 support escaping field values
+  * [9b51583] TT#31183 escape cdr reseller field values
+  * [846ec10] TT#32109 reseller time for dates in dirs/filenames
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Tue, 03 Apr 2018 22:25:41 +0200
+
 ngcp-cdr-exporter (6.2.0.0+0~mr6.2.0.0) unstable; urgency=medium
 
   * New release.
