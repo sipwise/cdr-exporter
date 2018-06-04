@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (5.5.5.1+0~mr5.5.5.1) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [1154285] TT#32109 reseller time for dates in dirs/filenames
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 04 Jun 2018 16:14:02 +0200
+
 ngcp-cdr-exporter (5.5.5.0+0~mr5.5.5.0) unstable; urgency=medium
 
   * New release.
