@@ -47,6 +47,18 @@ sub update_export_status{
     $u->execute($status, @{ $ids }) or die($dbh->errstr);
 }
 
+sub upsert_export_status{
+    my ($dbh, $ids, $status) = @_;
+    return unless(@{ $ids });
+    my $sth = $dbh->prepare("insert into accounting.cdr_export_status_data " .
+      "select _cdr.id,_cesc.id,now(),\"$status\",_cdr.start_time from accounting.cdr _cdr " .
+      "join (select * from accounting.cdr_export_status where type = \"default\") as _cesc " .
+      "where _cdr.id in (" . substr(',?' x scalar @$ids,1) . ") " .
+      "on duplicate key update export_status = \"$status\", exported_at = now()");
+    $sth->execute(@$ids) or die($dbh->errstr);
+    $sth->finish;
+}
+
 sub get_reseller_name {
     my ($dbh, $cid) = @_;
     my $q = $dbh->prepare("select name from billing.resellers where $reseller_id_col = ?");
