@@ -18,7 +18,7 @@ use Sys::Syslog;
 BEGIN {
     require Exporter;
     our @ISA = qw(Exporter);
-    our @EXPORT = qw(DEBUG confval quote_field write_reseller write_reseller_id update_export_status ilog);
+    our @EXPORT = qw(DEBUG confval quote_field write_reseller write_reseller_id update_export_status upsert_export_status ilog);
 }
 
 our $debug = 0;
@@ -65,6 +65,7 @@ my %config = (
     'default.QUOTES' => "'",
     'default.CSV_SEP' => ',',
     'default.CSV_ESC' => "\\",
+    'default.WRITE_EXTENDED_EXPORT_STATUS' => 0,
 );
 
 sub DEBUG {
@@ -497,6 +498,10 @@ sub finish {
 
 sub update_export_status {
     NGCP::CDR::Export::update_export_status($dbh, @_);
+}
+
+sub upsert_export_status {
+    NGCP::CDR::Export::upsert_export_status($dbh, @_);
 }
 
 sub commit {
