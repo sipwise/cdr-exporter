@@ -14,7 +14,6 @@ die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on 
 
 NGCP::CDR::Exporter::get_config('exporter', 'cdr-exporter.conf');
 
-
 NGCP::CDR::Exporter::DEBUG("+++ Start run with DB " . (confval('DBUSER') || "(undef)") .
     "\@".confval('DBDB')." to ".confval('PREFIX')."\n");
 
@@ -101,8 +100,10 @@ sub callback {
 NGCP::CDR::Exporter::finish();
 
 update_export_status("accounting.cdr", \@ids, "ok");
+upsert_export_status(\@ids, "ok") if confval('WRITE_EXTENDED_EXPORT_STATUS');
 # TODO: should be tagged as ignored/skipped/whatever
 update_export_status("accounting.cdr", \@ignored_ids, "ok");
+upsert_export_status(\@ignored_ids, "ok") if confval('WRITE_EXTENDED_EXPORT_STATUS');
 
 NGCP::CDR::Exporter::commit();
 
