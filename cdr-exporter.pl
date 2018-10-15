@@ -101,8 +101,10 @@ sub callback {
 NGCP::CDR::Exporter::finish();
 
 update_export_status("accounting.cdr", \@ids, "ok");
+upsert_export_status(\@ids, "ok");
 # TODO: should be tagged as ignored/skipped/whatever
 update_export_status("accounting.cdr", \@ignored_ids, "ok");
+upsert_export_status(\@ignored_ids, "ok");
 
 NGCP::CDR::Exporter::commit();
 
