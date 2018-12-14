@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1adf8d57_ab22aab7",
+        "filename": "cdr-md5.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1000001
+      },
+      "writtenOn": "2018-12-14T10:39:15Z",
+      "side": 1,
+      "message": "Jenkins ask you to quote this.",
+      "range": {
+        "startLine": 5,
+        "startChar": 21,
+        "endLine": 5,
+        "endChar": 43
+      },
+      "revId": "b4286c51f10964f8d60b3ca877cdd32fcb94373b",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
