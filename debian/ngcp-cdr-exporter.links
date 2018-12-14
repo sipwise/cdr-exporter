@@ -1,0 +1,3 @@
+usr/sbin/ngcp-cdr-exporter		usr/sbin/cdr-exporter
+usr/sbin/ngcp-cdr-md5			usr/sbin/cdr-md5
+usr/sbin/ngcp-event-exporter		usr/sbin/event-exporter
