@@ -5,7 +5,6 @@
 %:
 	dh $@
 
-override_dh_auto_install:
+override_dh_installcron:
 	dh_installcron
 	dh_installcron --name=ngcp-event-exporter
-	dh_auto_install
