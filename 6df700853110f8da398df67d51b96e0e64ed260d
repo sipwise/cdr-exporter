@@ -1,0 +1,8 @@
+Code-Review+2: Richard Fuchs <rfuchs@sipwise.com>
+Code-Review+1: Mykola Malkov <mmalkov@sipwise.com>
+Verified+1: Jenkins Jenkins
+Submitted-by: Guillem Jover <gjover@sipwise.com>
+Submitted-at: Mon, 17 Dec 2018 11:30:09 +0100
+Reviewed-on: http://gerrit.mgm.sipwise.com/25682
+Project: cdr-exporter
+Branch: refs/heads/master
