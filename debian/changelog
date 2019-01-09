@@ -1,3 +1,21 @@
+ngcp-cdr-exporter (7.1.1.0+0~mr7.1.1.0) unstable; urgency=medium
+
+  [ Guillem Jover ]
+  * [b77c67f] TT#49101 Use mktemp instead of creating an insecure temporary file
+  * [5f0d2d1] TT#49102 Improve build system
+  * [6df7008] TT#49102 Namespace debhelper fragment file with package name
+  * [33cc2cc] TT#49102 Improve package description
+  * [e1bd41c] TT#49102 Move dh_installcron commands to its own override
+  * [ef677b6] TT#49102 Update copyright years
+  * [c2cfa69] TT#49102 Namespace binaries with ngcp-
+
+  [ Rene Krenn ]
+  * [8035aac] TT#45957 write cdr_export_status ("default" stream)
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 09 Jan 2019 21:54:19 +0100
+
 ngcp-cdr-exporter (7.1.0.0+0~mr7.1.0.0) unstable; urgency=medium
 
   * New release.
