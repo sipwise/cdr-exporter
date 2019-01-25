@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (6.5.2.2+0~mr6.5.2.2) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [8871321] TT#45957 write cdr_export_status ("default" stream)
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Fri, 25 Jan 2019 14:06:24 +0100
+
 ngcp-cdr-exporter (6.5.2.1+0~mr6.5.2.1) unstable; urgency=medium
 
   * New release.
