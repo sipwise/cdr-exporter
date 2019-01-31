@@ -65,6 +65,8 @@ my %config = (
     'default.QUOTES' => "'",
     'default.CSV_SEP' => ',',
     'default.CSV_ESC' => "\\",
+    'default.CSV_HEADER' => '${version},${lines,%04i}',
+    'default.CSV_FOOTER' => '${checksum}',
     'default.WRITE_EXTENDED_EXPORT_STATUS' => 0,
 );
 
@@ -419,6 +421,7 @@ sub write_wrap {
             \@filevals, $reseller_tempdir, confval('PREFIX'),
             confval('VERSION'), $file_ts, $file_idx, confval('SUFFIX'),
             confval('FILE_FORMAT') // 'default', $reseller_file_data{$reseller},
+            confval('CSV_HEADER'), confval('CSV_FOOTER')
         );
         $rec_idx -= $recs;
         delete($reseller_file_data{$reseller});
