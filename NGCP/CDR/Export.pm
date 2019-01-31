@@ -1,6 +1,7 @@
 package NGCP::CDR::Export;
 
 use Digest::MD5;
+use POSIX qw(strftime);
 use warnings;
 use strict;
 
@@ -121,7 +122,7 @@ sub chownmod {
 sub write_file {
     my (
         $lines, $dircomp, $prefix, $version, $ts, $lastseq, $suffix,
-        $format, $file_data,
+        $format, $file_data, $csv_header, $csv_footer
     ) = @_;
 
     my $fn =  sprintf('%s/%s_%s_%s_%010i.%s', $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
@@ -136,7 +137,16 @@ sub write_file {
                 "'".($$file_data[3]//'')."','".($$file_data[4]//'')."'". ',' x 10);
     }
     else {
-        unshift(@{ $lines }, sprintf('%s,%04i', $version, $num));
+        my $str =
+            apply_format($csv_header, {
+                            rows      => $num,
+                            version   => $version,
+                            checksum  => undef,
+                            datetime  => time,
+                            first_seq => $lastseq,
+                            last_seq  => $lastseq+$num,
+            });
+        unshift(@{ $lines }, $str) if $str;
     }
 
     my $nl = "\n";
@@ -151,9 +161,17 @@ sub write_file {
     my $md5 = $ctx->hexdigest;
     if ($format eq 'kabelplus') {
         print $fd (",,'$md5'". ',' x 13 ."'md5'". ',' x 19 . "$nl");
-    }
-    else {
-        print $fd ("$md5$nl");
+    } else {
+        my $str =
+            apply_format($csv_footer, {
+                            rows      => $num,
+                            version   => $version,
+                            checksum  => $md5,
+                            datetime  => time,
+                            first_seq => $lastseq,
+                            last_seq  => $lastseq+$num,
+            });
+        print $fd "$str$nl" if $str;
     }
 
     NGCP::CDR::Exporter::DEBUG("$num data lines written to $tfn, checksum is $md5\n");
@@ -162,6 +180,45 @@ sub write_file {
 
     rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop");
     NGCP::CDR::Exporter::DEBUG("successfully moved $tfn to $fn\n");
+}
+
+sub apply_format {
+    my ($str, $data) = @_;
+
+    return unless $str;
+
+    my @m_formats = ();
+    my $applied = $str;
+
+    while ($str =~ /(?<!\\{1})(\$\{([^\$\[\]]+)\})/) {
+        my $pos = $-[1];
+        push @m_formats, {
+            mac => $1,
+            inp => $2,
+            pos => $pos,
+            len => length($1),
+        };
+        substr($str, $pos, length($1)) = "##$2#";
+    }
+
+    foreach my $m (reverse @m_formats) {
+        my ($mac, $inp, $pos, $len) = @{$m}{qw(mac inp pos len)};
+        my ($name,$strf) = split(/,/, $inp);
+
+        my $out = '';
+        if ($data->{$name}) {
+            my $val = $data->{$name};
+            if ($name eq 'datetime') { # special handling
+                $out = strftime($strf // '%Y-%m-%d %H:%M:%S', localtime($val));
+            } else {
+                $out = sprintf($strf // '%s', $val);
+            }
+        }
+
+        substr($applied, $pos, $len) = $out;
+    }
+
+    return $applied;
 }
 
 1;
