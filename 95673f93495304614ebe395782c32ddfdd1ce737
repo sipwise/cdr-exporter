@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da1255d7_1c18fc83",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 4
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2019-02-01T18:39:25Z",
+      "side": 1,
+      "message": "is that length mandatory here?",
+      "range": {
+        "startLine": 193,
+        "startChar": 26,
+        "endLine": 193,
+        "endChar": 29
+      },
+      "revId": "95673f93495304614ebe395782c32ddfdd1ce737",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da1255d7_3c2ce0aa",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 4
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2019-02-01T18:39:25Z",
+      "side": 1,
+      "message": "what if it slurps \"}\", then failing to match the leading \"}\" \nwhy not [^\\}] or eplicit [a-z0-9_,%]",
+      "range": {
+        "startLine": 193,
+        "startChar": 38,
+        "endLine": 193,
+        "endChar": 44
+      },
+      "revId": "95673f93495304614ebe395782c32ddfdd1ce737",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da1255d7_174d7772",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 4
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2019-02-01T18:39:25Z",
+      "side": 1,
+      "message": "better put keywords in quotes, if used as a hash key",
+      "range": {
+        "startLine": 197,
+        "startChar": 12,
+        "endLine": 197,
+        "endChar": 15
+      },
+      "revId": "95673f93495304614ebe395782c32ddfdd1ce737",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da1255d7_37319bed",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 4
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2019-02-01T18:39:25Z",
+      "side": 1,
+      "message": "i would combine it with the foreach below and build a $result directly. then cut away from $str, ie. $str\u003dsubstr($str,pos+len)",
+      "revId": "95673f93495304614ebe395782c32ddfdd1ce737",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
