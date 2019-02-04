@@ -1,0 +1,7 @@
+Verified+1: Jenkins Jenkins
+Code-Review+2: Sergii Kipot <skipot@sipwise.com>
+Submitted-by: Kirill Solomko <ksolomko@sipwise.com>
+Submitted-at: Mon, 04 Feb 2019 17:13:17 +0100
+Reviewed-on: http://gerrit.mgm.sipwise.com/26948
+Project: cdr-exporter
+Branch: refs/heads/mr6.5.3
