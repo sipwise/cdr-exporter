@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "da1255d7_d7111f5f",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 4
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000004
+      },
+      "writtenOn": "2019-02-04T10:44:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da1255d7_3c2ce0aa",
+      "range": {
+        "startLine": 193,
+        "startChar": 38,
+        "endLine": 193,
+        "endChar": 44
+      },
+      "revId": "95673f93495304614ebe395782c32ddfdd1ce737",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da1255d7_572f6fa1",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 4
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000004
+      },
+      "writtenOn": "2019-02-04T10:44:03Z",
+      "side": 1,
+      "message": "no, the length is not mandatory, that I forgot to remove ({1}).",
+      "parentUuid": "da1255d7_1c18fc83",
+      "range": {
+        "startLine": 193,
+        "startChar": 26,
+        "endLine": 193,
+        "endChar": 29
+      },
+      "revId": "95673f93495304614ebe395782c32ddfdd1ce737",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da1255d7_174d7772",
         "filename": "NGCP/CDR/Export.pm",
         "patchSetId": 4
@@ -71,6 +119,53 @@
     },
     {
       "key": {
+        "uuid": "da1255d7_1718d783",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 4
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000004
+      },
+      "writtenOn": "2019-02-04T10:44:03Z",
+      "side": 1,
+      "message": "true.",
+      "parentUuid": "da1255d7_174d7772",
+      "range": {
+        "startLine": 197,
+        "startChar": 12,
+        "endLine": 197,
+        "endChar": 15
+      },
+      "revId": "95673f93495304614ebe395782c32ddfdd1ce737",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da1255d7_b716ab53",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 4
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000004
+      },
+      "writtenOn": "2019-02-04T10:44:03Z",
+      "side": 1,
+      "message": "done.",
+      "range": {
+        "startLine": 197,
+        "startChar": 12,
+        "endLine": 197,
+        "endChar": 15
+      },
+      "revId": "95673f93495304614ebe395782c32ddfdd1ce737",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da1255d7_37319bed",
         "filename": "NGCP/CDR/Export.pm",
         "patchSetId": 4
@@ -82,6 +177,24 @@
       "writtenOn": "2019-02-01T18:39:25Z",
       "side": 1,
       "message": "i would combine it with the foreach below and build a $result directly. then cut away from $str, ie. $str\u003dsubstr($str,pos+len)",
+      "revId": "95673f93495304614ebe395782c32ddfdd1ce737",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da1255d7_372cfbaa",
+        "filename": "NGCP/CDR/Export.pm",
+        "patchSetId": 4
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1000004
+      },
+      "writtenOn": "2019-02-04T10:44:03Z",
+      "side": 1,
+      "message": "the only reason I do substr with the $str here is to prevent (likely unachievable scenario) it when say ${version} results internally in ${version}, as that potentially can create endless loop here.\n\nbelow I build the actual result.",
+      "parentUuid": "da1255d7_37319bed",
       "revId": "95673f93495304614ebe395782c32ddfdd1ce737",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": false
