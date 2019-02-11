@@ -1,3 +1,15 @@
+ngcp-cdr-exporter (7.0.2.1+0~mr7.0.2.1) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [ece0fd1] TT#45957 write cdr_export_status ("default" stream)
+
+  [ Kirill Solomko ]
+  * [66f0af2] TT#51166 add custom csv header/footer format support
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 11 Feb 2019 12:25:34 +0100
+
 ngcp-cdr-exporter (7.0.2.0+0~mr7.0.2.0) unstable; urgency=medium
 
   * New release.
