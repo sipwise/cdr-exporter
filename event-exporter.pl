@@ -23,9 +23,6 @@ my $config = {
 
 NGCP::CDR::Exporter::get_config('eventexporter', 'event-exporter.conf', $config);
 
-
-
-
 # make sure we always select id, subscriber_id, type, old and new;
 # if you change it, make sure to adapt slice in the loop too!
 unshift @NGCP::CDR::Exporter::admin_fields, (qw/
@@ -38,10 +35,8 @@ my @trailer = (
 );
 
 NGCP::CDR::Exporter::prepare_dbh(\@trailer, 'accounting.events');
-
-
+NGCP::CDR::Exporter::load_preferences();
 NGCP::CDR::Exporter::prepare_output();
-
 
 my %lines = ();
 my %res_lines;
@@ -54,11 +49,12 @@ sub callback {
     my ($row, $res_row) = @_;
     my $quotes = confval('QUOTES');
     my $sep = confval('CSV_SEP');
+    my $escape_symbol = confval('CSV_ESC');
     my @head = @{ $row }[0 .. 5];
     my ($id, $sub_id, $res_id, $type, $old, $new) = @head;
-    my @fields = map { quote_field($_); } (@{ $row }[6 .. @{ $row }-1]);
+    my @fields = map { quote_field($_,$sep,$quotes,$escape_symbol); } (@{ $row }[6 .. @{ $row }-1]);
     my $line = join "$sep", @fields;
-    my $reseller_line = join "$sep", map { quote_field($_); } (@$res_row);
+    my $reseller_line = join "$sep", map { quote_field($_,$sep,$quotes,$escape_symbol); } (@$res_row);
 
     if(confval('FILTER_FLAPPING')) {
         if($type =~ /^start_(.+)$/) {
