@@ -18,7 +18,22 @@ use Sys::Syslog;
 BEGIN {
     require Exporter;
     our @ISA = qw(Exporter);
-    our @EXPORT = qw(DEBUG confval quote_field write_reseller write_reseller_id update_export_status upsert_export_status ilog);
+    our @EXPORT = qw(
+        DEBUG
+        confval
+        quote_field
+        write_reseller
+        write_reseller_id
+        prepare_dbh
+        load_preferences
+        prefval
+        prepare_output
+        run
+        finish
+        update_export_status
+        upsert_export_status
+        ilog
+    );
 }
 
 our $debug = 0;
@@ -69,6 +84,10 @@ my %config = (
     'default.CSV_FOOTER' => '${checksum}',
     'default.WRITE_EXTENDED_EXPORT_STATUS' => 0,
 );
+
+# default reseller preferences
+my $reseller_preferences = {};
+# eg. $reseller_preferences->{'reseller x'}->{'attribute y'} = 'z';
 
 sub DEBUG {
     ilog('debug', @_);
@@ -171,10 +190,7 @@ sub confval {
 }
 
 sub quote_field {
-    my ($field) = @_;
-    my $sep = confval('CSV_SEP');
-    my $quotes = confval('QUOTES');
-    my $escape_symbol = confval('CSV_ESC');
+    my ($field,$sep,$quotes,$escape_symbol) = @_;
     if (defined $quotes and length($quotes) > 0) {
         if (defined $escape_symbol and length($escape_symbol) > 0) {
             if (defined $field and length($field) > 0) {
@@ -273,6 +289,40 @@ sub prepare_dbh {
 
     DEBUG $q if $debug;
 
+}
+
+sub load_preferences {
+
+    my $stmt = "select r.name,a.attribute,a.max_occur,v.value " .
+    "from billing.resellers r join provisioning.reseller_preferences v on v.reseller_id = r.id " .
+    "join provisioning.voip_preferences a on a.id = v.attribute_id ";
+    my $q = $dbh->prepare($stmt);
+    $q->execute(@{ $cids });
+    while(my $res = $q->fetchrow_arrayref) {
+        my ($reseller_name,$attribute,$max_occur,$value) = @$res;
+        $reseller_preferences->{$reseller_name} = {} unless exists $reseller_preferences->{$reseller_name};
+        my $preferences = $reseller_preferences->{$reseller_name};
+        if ($max_occur > 1) {
+            $preferences->{$attribute} = [] unless exists $preferences->{$attribute};
+            $preferences->{$attribute} = [ $preferences->{$attribute} ] unless 'ARRAY' eq ref $preferences->{$attribute};
+            push(@{$preferences->{$attribute}},$value);
+        } else {
+            $preferences->{$attribute} = $value unless exists $preferences->{$attribute}; # use only if no default pref is defined
+        }
+    }
+    $q->finish();
+
+}
+
+sub prefval {
+    my ($reseller_name, $attribute_name) = @_;
+    if ($reseller_name and exists $reseller_preferences->{$reseller_name}) {
+        my $preferences = $reseller_preferences->{$reseller_name};
+        if ($attribute_name and exists $preferences->{$attribute}) {
+            return $preferences->{$attribute};
+        }
+    }
+    return;
 }
 
 sub prepare_output {

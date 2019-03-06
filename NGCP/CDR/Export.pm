@@ -91,7 +91,6 @@ sub get_missing_resellers {
     return { names => \@names, ids => \@ids };
 }
 
-
 sub get_ts_for_filename {
     my ($xnow) = @_;
 
