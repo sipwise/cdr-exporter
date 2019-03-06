@@ -36,7 +36,7 @@ my @ignored_ids = ();
 my @ids = ();
 
 NGCP::CDR::Exporter::prepare_dbh(\@trailer, 'accounting.cdr');
-
+NGCP::CDR::Exporter::load_preferences();
 NGCP::CDR::Exporter::prepare_output();
 
 NGCP::CDR::Exporter::run(\&callback);
@@ -58,29 +58,34 @@ sub filestats_callback {
 
 sub callback {
     my ($row, $res_row, $data_row) = @_;
-    my $quotes = confval('QUOTES');
-    my $sep = confval('CSV_SEP');
+    #my $quotes = confval('QUOTES');
+    #my $sep = prefval() || confval('CSV_SEP');
     my @fields = @{ $row };
     my $id = shift @fields;
     my $src_uuid = shift @fields;
     my $dst_uuid = shift @fields;
     my $src_provid = shift @fields;
     my $dst_provid = shift @fields;
-    @fields = map { quote_field($_); } (@fields);
+    #@fields = map { quote_field($_); } (@fields);
 
     if(confval('EXPORT_INCOMING') eq "no" && $src_uuid eq "0") {
         push @ignored_ids, $id;
         return;
     }
 
-    my $line = join "$sep", @fields;
+    my $sep = prefval('system','cdr_export_field_separator') // confval('CSV_SEP');
+    my $quotes = confval('QUOTES');
+    my $escape_symbol = confval('CSV_ESC');
+    my $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } @fields);
     write_reseller('system', $line, \&filestats_callback, $data_row);
     push(@ids, $id);
 
-    my $reseller_line = join "$sep", map { quote_field($_); } (@$res_row);
-
     if($src_uuid ne "0") {
-        write_reseller_id($src_provid, $reseller_line, \&filestats_callback, $data_row);
+        $sep = prefval($src_provid,'cdr_export_field_separator') // confval('CSV_SEP');
+        $quotes = confval('QUOTES');
+        $escape_symbol = confval('CSV_ESC');
+        $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } @$res_row);
+        write_reseller_id($src_provid, $line, \&filestats_callback, $data_row);
     }
     if($dst_uuid ne "0") {
         if(confval('EXPORT_INCOMING') eq "no" && $src_provid ne $dst_provid) {
@@ -89,7 +94,11 @@ sub callback {
             if ($src_uuid ne '0' && $src_provid eq $dst_provid) {
                 # skip duplicate entries
             } else {
-                write_reseller_id($dst_provid, $reseller_line, \&filestats_callback, $data_row);
+                $sep = prefval($dst_provid,'cdr_export_field_separator') // confval('CSV_SEP');
+                $quotes = confval('QUOTES');
+                $escape_symbol = confval('CSV_ESC');
+                $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } @$res_row);
+                write_reseller_id($dst_provid, $line, \&filestats_callback, $data_row);
             }
         }
     }
