@@ -294,7 +294,7 @@ sub prepare_dbh {
 sub load_preferences {
 
     my $stmt = "select r.contract_id,a.attribute,a.max_occur,v.value " .
-    "from billing.resellers r join provisioning.reseller_preferences v on v.reseller_id = r.id " .
+    "from billing.resellers r join provisioning.voip_reseller_preferences v on v.reseller_id = r.id " .
     "join provisioning.voip_preferences a on a.id = v.attribute_id";
     my $q = $dbh->prepare($stmt);
     $q->execute();
