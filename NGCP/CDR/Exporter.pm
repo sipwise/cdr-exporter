@@ -26,6 +26,7 @@ BEGIN {
         write_reseller_id
         prepare_dbh
         load_preferences
+        apply_sclidui_rwrs
         prefval
         prepare_output
         run
@@ -88,6 +89,21 @@ my %config = (
 # specify 'system' default reseller preferences:
 my $reseller_preferences = {};
 # eg. $reseller_preferences->{'system'}->{'attribute y'} = 'z';
+
+my $rewrite_rule_sets = {};
+
+my $field_positions = {
+    source_cli => {
+        aliases => [ qw(source_cli accounting.cdr.source_cli cdr.source_cli) ],
+        admin_positions => undef,
+        reseller_positions => undef,
+    },
+    destination_user_in => {
+        aliases => [ qw(destination_user_in accounting.destination_user_in cdr.destination_user_in) ],
+        admin_positions => undef,
+        reseller_positions => undef,
+    },
+};
 
 sub DEBUG {
     ilog('debug', @_);
@@ -235,14 +251,26 @@ sub extract_field_positions {
     my %index;
     my @positions;
     @index{@admin_fields} = (0..$#admin_fields);
+    my ($source_cli_position,$destination_user_int
     for(my $i = 0; $i < @fields; $i++) {
         my $name = $fields[$i];
+        my $position;
         if (! exists $index{$name}) {
             push(@admin_fields, $name);
-            push(@positions, $#admin_fields);
+            $position = $#admin_fields;
+        } else {
+            $position = $index{$name};
         }
-        else {
-            push @positions, $index{$name};
+        push(@positions, $position);
+        foreach my $af (keys %$field_positions) {
+            $field_positions->{$af}->{admin_positions} = {}
+                unless defined $field_positions->{$af}->{admin_positions};
+            $field_positions->{$af}->{reseller_positions} = {}
+                unless defined $field_positions->{$af}->{reseller_positions};
+            if (grep { lc($_) eq lc($name); } @{$field_positions->{$af}->{aliases}}) {
+                $field_positions->{$af}->{admin_positions}->{$position} = 1;
+                $field_positions->{$af}->{reseller_positions}->{$i} = 1;
+            }
         }
     }
     return @positions;
@@ -280,6 +308,14 @@ sub prepare_dbh {
     $last_admin_field = $#admin_fields;
     @reseller_positions = extract_field_positions(@reseller_fields);
     @data_positions = extract_field_positions(@data_fields);
+    foreach my $af (keys %$field_positions) {
+        $field_positions->{$af}->{admin_positions} = [
+            sort keys %{$field_positions->{$af}->{admin_positions}}
+        ] if defined $field_positions->{$af}->{admin_positions};
+        $field_positions->{$af}->{reseller_positions} = [
+            sort keys %{$field_positions->{$af}->{reseller_positions}}
+        ] if defined $field_positions->{$af}->{reseller_positions};
+    }
 
     $q = "select " .
         join(", ", @admin_fields) . " from $table " .
@@ -294,8 +330,9 @@ sub prepare_dbh {
 sub load_preferences {
 
     my $stmt = "select r.contract_id,a.attribute,a.max_occur,v.value " .
-    "from billing.resellers r join provisioning.voip_reseller_preferences v on v.reseller_id = r.id " .
-    "join provisioning.voip_preferences a on a.id = v.attribute_id";
+        "from billing.resellers r " .
+        "join provisioning.voip_reseller_preferences v on v.reseller_id = r.id " .
+        "join provisioning.voip_preferences a on a.id = v.attribute_id";
     my $q = $dbh->prepare($stmt);
     $q->execute();
     while(my $res = $q->fetchrow_arrayref) {
@@ -309,9 +346,117 @@ sub load_preferences {
         } else {
             $preferences->{$attribute} = $value unless exists $preferences->{$attribute}; # use only if no default pref is defined
         }
+        if ($attribute eq 'cdr_export_sclidui_rwrs_id'
+            and $preferences->{$attribute}) {
+            load_rewrite_rules($preferences->{$attribute});
+        }
     }
     $q->finish();
 
+}
+
+sub load_rewrite_rules {
+
+    my ($rwrs_id) = @_;
+    return if exists $rewrite_rule_sets->{$rwrs_id};
+    my $stmt = "select * from provisioning.voip_rewrite_rules where set_id = ? order by priority asc";
+    my $q = $dbh->prepare($stmt);
+    $q->execute($rwrs_id);
+    my %rules = ();
+    while(my $rule = $q->fetchrow_hashref) {
+        next unless $rule->{enabled}; # panel does not consider enabled?
+        $rules{$rule->{direction}} = {} unless exists $rules{$rule->{direction}};
+        my $directions = $rules{$rule->{direction}};
+        $directions->{$rule->{field}} = [] unless exists $directions->{$rule->{field}};
+        my $fields = $directions->{$rule->{field}};
+        push(@$fields,$rule);
+    }
+    $rewrite_rule_sets->{$rwrs_id} = \%rules;
+    return;
+
+}
+
+sub apply_sclidui_rwrs {
+    my ($reseller_id,$row) = @_;
+    my $row_type;
+    if ('system' eq $reseller_id) {
+        $row_type = 'admin_positions';
+    } else {
+        $row_type = 'reseller_positions';
+    }
+    if (defined $field_positions->{source_cli}->{$row_type}) {
+        foreach my $i (@{$field_positions->{source_cli}->{$row_type}}) {
+            $row->[$i] = apply_rewrite(
+                number => $row->[$i],
+                dir => 'caller_out',
+                rwrs_id => prefval($reseller_id,'cdr_export_sclidui_rwrs_id'),
+            );
+        }
+    }
+    if (defined $field_positions->{destination_user_in}->{$row_type}) {
+        foreach my $i (@{$field_positions->{destination_user_in}->{$row_type}}) {
+            $row->[$i] = apply_rewrite(
+                number => $row->[$i],
+                dir => 'callee_out',
+                rwrs_id => prefval($reseller_id,'cdr_export_sclidui_rwrs_id'),
+            );
+        }
+    }
+    return @$row;
+}
+
+sub apply_rewrite {
+    my (%params) = @_;
+
+    my $callee = $params{number};
+    my $dir = $params{direction};
+    my $rwrs_id = $params{rwrs_id};
+
+    return $callee unless $dir =~ /^(caller_in|callee_in|caller_out|callee_out|callee_lnp|caller_lnp)$/;
+
+    my ($field, $direction) = split /_/, $dir;
+
+    my @rules;
+    if ($rwrs_id and exists $rewrite_rule_sets->{$rwrs_id}) {
+        my $rwrs_rules = $rewrite_rule_sets->{$rwrs_id};
+        if ($direction and exists $rwrs_rules->{$direction}) {
+            my $directions = $rwrs_rules->{$direction};
+            if ($field and exists $directions->{$field}) {
+                @rules = @{$directions->{$field}};
+            }
+        }
+    }
+
+    foreach my $r (@rules) {
+        my $match = $r->{match_pattern};
+        my $replace = $r->{replace_pattern};
+
+        #print ">>>>>>>>>>> match=$match, replace=$replace\n";
+
+        $match = [ $match ] if(ref $match ne "ARRAY");
+
+        $replace = shift @{ $replace } if(ref $replace eq "ARRAY");
+        $replace =~ s/\\(\d{1})/\${$1}/g;
+
+        $replace =~ s/\"/\\"/g;
+        $replace = qq{"$replace"};
+
+        my $found;
+        #print ">>>>>>>>>>> apply matches\n";
+        foreach my $m(@{ $match }) {
+            #print ">>>>>>>>>>>     m=$m, r=$replace\n";
+            if($callee =~ s/$m/$replace/eeg) {
+                # we only process one match
+                #print ">>>>>>>>>>> match found, callee=$callee\n";
+                $found = 1;
+                last;
+            }
+        }
+        last if $found;
+        #print ">>>>>>>>>>> done, match=$match, replace=$replace, callee is $callee\n";
+    }
+
+    return $callee;
 }
 
 sub prefval {

@@ -76,7 +76,7 @@ sub callback {
     my $sep = prefval('system','cdr_export_field_separator') // confval('CSV_SEP');
     my $quotes = confval('QUOTES');
     my $escape_symbol = confval('CSV_ESC');
-    my $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } @fields);
+    my $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } apply_sclidui_rwrs(\@fields));
     write_reseller('system', $line, \&filestats_callback, $data_row);
     push(@ids, $id);
 
@@ -84,7 +84,7 @@ sub callback {
         $sep = prefval($src_provid,'cdr_export_field_separator') // confval('CSV_SEP');
         $quotes = confval('QUOTES');
         $escape_symbol = confval('CSV_ESC');
-        $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } @$res_row);
+        $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } apply_sclidui_rwrs($res_row));
         write_reseller_id($src_provid, $line, \&filestats_callback, $data_row);
     }
     if($dst_uuid ne "0") {
@@ -97,7 +97,7 @@ sub callback {
                 $sep = prefval($dst_provid,'cdr_export_field_separator') // confval('CSV_SEP');
                 $quotes = confval('QUOTES');
                 $escape_symbol = confval('CSV_ESC');
-                $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } @$res_row);
+                $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } apply_sclidui_rwrs($res_row));
                 write_reseller_id($dst_provid, $line, \&filestats_callback, $data_row);
             }
         }
