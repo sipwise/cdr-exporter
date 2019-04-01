@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (7.1.2.1+0~mr7.1.2.1) unstable; urgency=medium
+
+  [ Kirill Solomko ]
+  * [7051d38] TT#51166 add custom csv header/footer format support
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 01 Apr 2019 16:26:40 +0200
+
 ngcp-cdr-exporter (7.1.2.0+0~mr7.1.2.0) unstable; urgency=medium
 
   * New release.
