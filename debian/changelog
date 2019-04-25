@@ -1,3 +1,14 @@
+ngcp-cdr-exporter (7.4.0.0+0~mr7.4.0.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [0d0a7b4] TT#54204 reseller preferences - field separator
+  * [92943d9] TT#54204 rename reseller preferences table
+  * [a3edf32] TT#54262 reseller preferences - scli/dui rwrs
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Thu, 25 Apr 2019 14:25:37 +0200
+
 ngcp-cdr-exporter (7.3.0.0+0~mr7.3.0.0) unstable; urgency=medium
 
   [ Kirill Solomko ]
