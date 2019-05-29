@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (6.5.2.4+0~mr6.5.2.4) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [e13bb4b] TT#59359 fix .cdr footer not rendered
+
+  [ Sipwise Jenkins Builder ]
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 29 May 2019 11:02:43 +0200
+
 ngcp-cdr-exporter (6.5.2.3+0~mr6.5.2.3) unstable; urgency=medium
 
   [ Kirill Solomko ]
