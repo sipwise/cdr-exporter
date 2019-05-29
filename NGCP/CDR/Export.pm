@@ -213,7 +213,7 @@ sub apply_format {
         my $out = '';
         if ($name eq 'datetime') { # special handling
             $out = $dt->strftime($strf // '%Y-%m-%d %H:%M:%S');
-        } elsif ($data->{$name}) {
+        } elsif (defined $data->{$name}) {
             $out = sprintf($strf // '%s', $data->{$name});
         }
 
