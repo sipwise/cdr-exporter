@@ -40,24 +40,29 @@ sub set_mark {
     }
 }
 
-sub update_export_status{
+sub update_export_status {
     my ($dbh, $tbl, $ids, $status) = @_;
     return unless(@{ $ids });
-    my $u = $dbh->prepare("update $tbl set export_status=?, exported_at=now()" .
-      " where id in (" . join (',', map { '?' }(1 .. @{ $ids }) ) . ")");
-    $u->execute($status, @{ $ids }) or die($dbh->errstr);
+    while (my @chunk = splice @$ids, 0, 10000) {
+        my $sth = $dbh->prepare("update $tbl set export_status=?, exported_at=now()" .
+          " where id in (" . substr(',?' x scalar @chunk,1) . ")");
+        $sth->execute($status, @chunk) or die($dbh->errstr);
+        $sth->finish();
+    }
 }
 
-sub upsert_export_status{
-    my ($dbh, $ids, $status) = @_;
+sub upsert_export_status {
+    my ($dbh, $stream, $ids, $status) = @_;
     return unless(@{ $ids });
-    my $sth = $dbh->prepare("insert into accounting.cdr_export_status_data " .
-      "select _cdr.id,_cesc.id,now(),\"$status\",_cdr.start_time from accounting.cdr _cdr " .
-      "join (select * from accounting.cdr_export_status where type = \"default\") as _cesc " .
-      "where _cdr.id in (" . substr(',?' x scalar @$ids,1) . ") " .
-      "on duplicate key update export_status = \"$status\", exported_at = now()");
-    $sth->execute(@$ids) or die($dbh->errstr);
-    $sth->finish;
+    while (my @chunk = splice @$ids, 0, 10000) {
+        my $sth = $dbh->prepare("insert into accounting.cdr_export_status_data " .
+          "select _cdr.id,_cesc.id,now(),\"$status\",_cdr.start_time from accounting.cdr _cdr " .
+          "join (select * from accounting.cdr_export_status where type = \"$stream\") as _cesc " .
+          "where _cdr.id in (" . substr(',?' x scalar @chunk,1) . ") " .
+          "on duplicate key update export_status = \"$status\", exported_at = now()");
+        $sth->execute(@chunk) or die($dbh->errstr);
+        $sth->finish();
+    }
 }
 
 sub get_reseller_name {
@@ -76,18 +81,19 @@ sub get_reseller_name {
 
 sub get_missing_resellers {
     my ($dbh, $cids) = @_;
-    my $qs = "select name, $reseller_id_col from billing.resellers";
+    my $stmt = "select name, $reseller_id_col from billing.resellers";
     if(@{ $cids }) {
-        $qs .= " where $reseller_id_col not in (" . join (',', map { '?' }(1 .. @{ $cids }) ) . ") and status != \"terminated\"";
+        $stmt .= " where $reseller_id_col not in (" . join (',', map { '?' }(1 .. @{ $cids }) ) . ") and status != \"terminated\"";
     }
-    my $q = $dbh->prepare($qs);
-    $q->execute(@{ $cids });
+    my $sth = $dbh->prepare($stmt);
+    $sth->execute(@{ $cids });
     my @names = ();
     my @ids = ();
-    while(my $res = $q->fetchrow_arrayref) {
+    while(my $res = $sth->fetchrow_arrayref) {
         push @names, $res->[0];
         push @ids, $res->[1];
     }
+    $sth->finish();
     return { names => \@names, ids => \@ids };
 }
 
@@ -134,8 +140,7 @@ sub write_file {
     if ($format eq 'kabelplus') {
         unshift(@{ $lines }, "'$num'". ',' x 15 ."'hdr',,,'".($$file_data[0]//'')."','".($$file_data[1]//'')."',,,'".($$file_data[2]//'')."'," .
                 "'".($$file_data[3]//'')."','".($$file_data[4]//'')."'". ',' x 10);
-    }
-    else {
+    } else {
         my $str =
             apply_format($csv_header, {
                             rows      => $num,

@@ -7,39 +7,74 @@ use Fcntl qw(LOCK_EX LOCK_NB);
 
 use NGCP::CDR::Exporter;
 
-# $NGCP::CDR::Exporter::debug = 1;
-# my $collid = "exporter";
-
 die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
-
-NGCP::CDR::Exporter::get_config('exporter', 'cdr-exporter.conf');
-
-NGCP::CDR::Exporter::DEBUG("+++ Start run with DB " . (confval('DBUSER') || "(undef)") .
-    "\@".confval('DBDB')." to ".confval('PREFIX')."\n");
-
-# add fields we definitely need, will be removed during processing
-unshift @NGCP::CDR::Exporter::admin_fields, qw/
-    accounting.cdr.id
-    accounting.cdr.source_user_id
-    accounting.cdr.destination_user_id
-    accounting.cdr.source_provider_id
-    accounting.cdr.destination_provider_id
-/;
 
 my @trailer = (
     { 'order by' => 'accounting.cdr.id' },
     { 'limit' => '300000' },
 );
 
-# working vars at beginning:
-my @ignored_ids = ();
-my @ids = ();
+my @ignored_ids;
+my @ids;
 
-NGCP::CDR::Exporter::prepare_dbh(\@trailer, 'accounting.cdr');
-NGCP::CDR::Exporter::load_preferences();
-NGCP::CDR::Exporter::prepare_output();
+foreach my $stream (NGCP::CDR::Exporter::import_config('cdr-exporter.conf')) {
+    next unless confval('ENABLED');
+    NGCP::CDR::Exporter::prepare_config('exporter', $stream);
+    NGCP::CDR::Exporter::DEBUG("+++ Start stream '$stream' with DB " .
+        (confval('DBUSER') || "(undef)") .
+        "\@".confval('DBDB')." to ".confval('PREFIX')."\n");
+    # add fields we definitely need, will be removed during processing
+    unshift @NGCP::CDR::Exporter::admin_fields, qw/
+        accounting.cdr.id
+        accounting.cdr.source_user_id
+        accounting.cdr.destination_user_id
+        accounting.cdr.source_provider_id
+        accounting.cdr.destination_provider_id
+    /;
+    @ignored_ids = ();
+    @ids = ();
 
-NGCP::CDR::Exporter::run(\&callback);
+    NGCP::CDR::Exporter::prepare_dbh(\@trailer, 'accounting.cdr', sub {
+        my ($dbh,$joins,$conds) = @_;
+        # for the default stream, we keep expecting the export_status condition defined in config.yml,
+        # therefor leave this commented out:
+        # if ('default' eq $stream) {
+        #     push @$conds, "accounting.cdr.export_status = 'unexported'";
+        # } else {
+        #
+        # but custom streams need to be registered and the export_status cond is added implicitly:
+        if ('default' ne $stream) {
+            my $stmt = "insert into accounting.cdr_export_status (id,type) values (null,?)" .
+                " on duplicate key update id = last_insert_id(id)";
+            $dbh->do($stmt, undef, $stream) or die "Failed to register stream '$stream'";
+            my $export_status_id = $dbh->{'mysql_insertid'};
+
+            push @$joins, "left join accounting.cdr_export_status_data as __cesd" .
+                " on __cesd.cdr_id = accounting.cdr.id and __cesd.status_id = " . $export_status_id;
+            push @$conds, "(__cesd.export_status = 'unexported' or __cesd.export_status is null)";
+        }
+    });
+    NGCP::CDR::Exporter::load_preferences();
+    NGCP::CDR::Exporter::prepare_output();
+
+    NGCP::CDR::Exporter::run(\&callback);
+
+    #DEBUG "ignoring cdr ids " . (join "$sep", @ignored_ids);
+
+    NGCP::CDR::Exporter::finish();
+
+    if ('default' eq $stream) {
+        update_export_status("accounting.cdr", \@ids, "ok");
+        # TODO: should be tagged as ignored/skipped/whatever
+        update_export_status("accounting.cdr", \@ignored_ids, "ok");
+    } else {
+        upsert_export_status(\@ids, "ok");
+        # TODO: should be tagged as ignored/skipped/whatever
+        upsert_export_status(\@ignored_ids, "ok");
+    }
+
+    NGCP::CDR::Exporter::commit();
+}
 
 sub filestats_callback {
     my ($data_row, $ref) = @_;
@@ -104,18 +139,6 @@ sub callback {
         }
     }
 }
-
-#DEBUG "ignoring cdr ids " . (join "$sep", @ignored_ids);
-
-NGCP::CDR::Exporter::finish();
-
-update_export_status("accounting.cdr", \@ids, "ok");
-upsert_export_status(\@ids, "ok") if confval('WRITE_EXTENDED_EXPORT_STATUS');
-# TODO: should be tagged as ignored/skipped/whatever
-update_export_status("accounting.cdr", \@ignored_ids, "ok");
-upsert_export_status(\@ignored_ids, "ok") if confval('WRITE_EXTENDED_EXPORT_STATUS');
-
-NGCP::CDR::Exporter::commit();
 
 __DATA__
 This exists to allow the locking code at the beginning of the file to work.
