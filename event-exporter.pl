@@ -9,9 +9,6 @@ use NGCP::CDR::Exporter;
 
 die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
 
-# $NGCP::CDR::Exporter::debug = 1;
-# my $collid = "eventexporter";
-
 $NGCP::CDR::Export::reseller_id_col = 'id';
 
 # default config values overrides
@@ -21,7 +18,8 @@ my $config = {
     'SUFFIX' => 'edr',
 };
 
-NGCP::CDR::Exporter::get_config('eventexporter', 'event-exporter.conf', $config);
+NGCP::CDR::Exporter::import_config('event-exporter.conf');
+NGCP::CDR::Exporter::prepare_config('eventexporter', undef, $config);
 
 # make sure we always select id, subscriber_id, type, old and new;
 # if you change it, make sure to adapt slice in the loop too!
