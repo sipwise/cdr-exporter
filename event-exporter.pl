@@ -21,7 +21,8 @@ my $config = {
     'SUFFIX' => 'edr',
 };
 
-NGCP::CDR::Exporter::get_config('eventexporter', 'event-exporter.conf', $config);
+NGCP::CDR::Exporter::import_config('cdr-exporter.conf');
+NGCP::CDR::Exporter::prepare_config('eventexporter', undef, $config);
 
 # make sure we always select id, subscriber_id, type, old and new;
 # if you change it, make sure to adapt slice in the loop too!
