@@ -20,6 +20,8 @@ BEGIN {
     our @ISA = qw(Exporter);
     our @EXPORT = qw(
         DEBUG
+        import_config
+        prepare_config
         confval
         quote_field
         write_reseller
@@ -37,8 +39,7 @@ BEGIN {
     );
 }
 
-our $debug = 0;
-our $collid = "exporter";
+my $exporter_type = "exporter";
 
 my $last_admin_field;
 our @admin_fields;
@@ -48,7 +49,6 @@ my @joins;
 my @conditions;
 my $dbh;
 my $q;
-my $sth;
 my %reseller_names;
 my %reseller_ids;
 my %reseller_lines;
@@ -63,10 +63,12 @@ my $file_ts_map;
 my @reseller_positions;
 my @data_positions;
 
+my $stream = "default";
 # default config values
 my %config = (
     'default.FILTER_FLAPPING' => 0,
     'default.MERGE_UPDATE' => 0,
+    'default.ENABLED' => 1,
     'default.PREFIX' => 'ngcp',
     'default.VERSION' => '007',
     'default.SUFFIX' => 'cdr',
@@ -83,7 +85,6 @@ my %config = (
     'default.CSV_ESC' => "\\",
     'default.CSV_HEADER' => '${version},${lines,%04i}',
     'default.CSV_FOOTER' => '${checksum}',
-    'default.WRITE_EXTENDED_EXPORT_STATUS' => 0,
 );
 
 # specify 'system' default reseller preferences:
@@ -113,10 +114,10 @@ sub ERR {
 }
 
 my @config_paths = (qw#
-    /home/rkrenn/reseller_preferences/
     /etc/ngcp-cdr-exporter/
     .
 #);
+#/home/rkrenn/temp/cdrexportstreams/
 
 sub config2array {
     my $config_key = shift;
@@ -137,19 +138,16 @@ sub get_config_fields {
     return @ret;
 }
 
-sub get_config {
-    my ($coll, $cf, $conf_upd) = @_;
+sub import_config {
 
-    $collid = $coll;
-
-    for my $key (%$conf_upd) {
-        $config{'default.' . $key} = $$conf_upd{$key};
-    }
-
+    my $cf = shift;
     my $config_file;
-    foreach my $cp(@config_paths) {
-        if(-f "$cp/$cf") {
-            $config_file = "$cp/$cf";
+    foreach my $cp (@config_paths) {
+        my $path = $cp;
+        $path .= '/' if $path !~ m!/$!;
+        $path .= $cf;
+        if(-f $path) {
+            $config_file = $path;
             last;
         }
     }
@@ -159,25 +157,65 @@ sub get_config {
     Config::Simple->import_from("$config_file" , \%config) or
         die "Couldn't open the configuration file '$config_file'.\n";
 
-    # backwards compat
-    $config{'default.DESTDIR'} //= $config{'default.CDRDIR'} // $config{'default.EDRDIR'};
-
-    #$config{'default.DBHOST'} = '192.168.0.29';
-    #$config{'default.DBUSER'} = 'root';
-    #$config{'default.DBPASS'} = '';
-    #$config{'default.TRANSFER_REMOTE'} = "/home/rkrenn/temp/reseller_preferences/cdrexport";
-    #$config{'default.DESTDIR'} = "/home/rkrenn/temp/reseller_preferences/cdrexport";
-
     start_log();
 
-    die "Invalid destination directory '".$config{'default.DESTDIR'}."'\n"
-        unless(-d $config{'default.DESTDIR'});
+    my $cfg = new Config::Simple();
+    $cfg->read($config_file);
+
+    my %presets = %config;
+
+    my @blocks = qw(default);
+    foreach my $block ($cfg->get_block()) {
+        next if 'default' eq $block;
+        push(@blocks,$block);
+        die "Stream name 'ama_ccs' is reserved.\n" if 'ama_ccs' eq $block;
+        die "Stream name 'exporter' is reserved.\n" if 'exporter' eq $block;
+        die "Stream name 'eventexporter' is reserved.\n" if 'exporter' eq $block;
+        foreach my $key (%presets) {
+            my $preset = $config{$key};
+            if ($key =~ /^default\.(.+)$/) {
+                $config{$block . '.' . $1} = $preset unless exists $config{$block . '.' . $1};
+            }
+        }
+    }
+    return @blocks;
+
+}
+
+sub prepare_config {
+    ($exporter_type, $stream, my $conf_upd) = @_;
+
+    $stream //= 'default';
+
+    if (defined $conf_upd) {
+        for my $key (%$conf_upd) {
+            $config{$stream . '.' . $key} = $$conf_upd{$key};
+        }
+    }
+
+    # backwards compat
+    $config{$stream . '.DESTDIR'} //= $config{$stream . '.CDRDIR'} // $config{$stream . '.EDRDIR'};
+
+    # use constants from default, if missing:
+    $config{$stream . '.PREFIX'} //= $config{'default.PREFIX'};
+    $config{$stream . '.DBDB'} //= $config{'default.DBDB'};
+    $config{$stream . '.VERSION'} //= $config{'default.VERSION'};
+
+    #$config{$stream . '.DBHOST'} = '192.168.0.213';
+    #$config{$stream . '.DBUSER'} = 'root';
+    #$config{$stream . '.DBPASS'} = '';
+    #$config{$stream . '.TRANSFER_REMOTE'} = "/home/rkrenn/temp/cdrexportstreams/cdrexport";
+    #$config{$stream . '.DESTDIR'} = "/home/rkrenn/temp/cdrexportstreams/cdrexport";
+
+    die "Invalid destination directory '".$config{$stream . '.DESTDIR'}."'\n"
+        unless(-d $config{$stream . '.DESTDIR'});
 
     @admin_fields = get_config_fields('ADMIN_EXPORT_FIELDS');
     @reseller_fields = get_config_fields('RESELLER_EXPORT_FIELDS');
     @data_fields = get_config_fields('DATA_FIELDS');
 
-    foreach my $f(get_config_fields('EXPORT_JOINS')) {
+    @joins = ();
+    foreach my $f (get_config_fields('EXPORT_JOINS')) {
         $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
         my ($a, $b) = split(/\s*=>\s*{\s*/, $f);
         $a =~ s/^\s*\'//; $a =~ s/\'$//g;
@@ -188,7 +226,8 @@ sub get_config {
         push @joins, { $a => { $c => $d } };
     }
 
-    foreach my $f(get_config_fields('EXPORT_CONDITIONS')) {
+    @conditions = ();
+    foreach my $f (get_config_fields('EXPORT_CONDITIONS')) {
         next unless($f);
         $f =~ s/^\s*\{?\s*//; $f =~ s/\}\s*\}\s*$/}/;
         my ($a, $b) = split(/\s*=>\s*{\s*/, $f);
@@ -201,15 +240,23 @@ sub get_config {
         push @conditions, { $a => { $c => $d } };
     }
 
+    %reseller_names = ();
+    %reseller_ids = ();
+    %reseller_lines = ();
+    %reseller_file_data = ();
+    %reseller_counts = ();
+    %reseller_file_counts = ();
+    %mark = ();
+
     if ((confval("MAINTENANCE") // 'no') eq 'yes') {
-            exit(0);
+        exit(0);
     }
 }
 
 
 sub confval {
     my ($val) = @_;
-    return $config{'default.' . $val};
+    return $config{$stream . '.' . $val};
 }
 
 sub quote_field {
@@ -283,23 +330,29 @@ sub extract_field_positions {
 };
 
 sub prepare_dbh {
-    my ($trailer, $table) = @_;
+    my ($trailer, $table, $prepend_default_cond_code) = @_;
 
     $dbh = DBI->connect("dbi:mysql:" . confval('DBDB') .
         ";host=".confval('DBHOST'),
         confval('DBUSER'), confval('DBPASS'))
         or die "failed to connect to db: $DBI::errstr";
 
-    $dbh->{mysql_auto_reconnect} = 1;
+    #$dbh->{mysql_auto_reconnect} = 1;
     $dbh->{AutoCommit} = 0;
 
     my @intjoins = ();
+    my @conds = ();
+
+    if ('CODE' eq ref $prepend_default_cond_code) {
+        &$prepend_default_cond_code($dbh,\@intjoins,\@conds);
+    }
+
     foreach my $f(@joins) {
         my ($table, $keys) = %{ $f };
         my ($foreign_key, $own_key) = %{ $keys };
         push @intjoins, "left outer join $table on $foreign_key = $own_key";
     }
-    my @conds = ();
+
     foreach my $f(@conditions) {
         my ($field, $match) = %{ $f };
         my ($op, $val) = %{ $match };
@@ -312,6 +365,10 @@ sub prepare_dbh {
     }
 
     $last_admin_field = $#admin_fields;
+    foreach my $af (keys %$field_positions) {
+        undef $field_positions->{$af}->{admin_positions};
+        undef $field_positions->{$af}->{reseller_positions};
+    }
     @reseller_positions = extract_field_positions(@reseller_fields);
     @data_positions = extract_field_positions(@data_fields);
     foreach my $af (keys %$field_positions) {
@@ -329,7 +386,7 @@ sub prepare_dbh {
         "where " . join(" and ", @conds) . " " .
         join(" ", @trail);
 
-    DEBUG $q if $debug;
+    DEBUG $q; # if $debug;
 
 }
 
@@ -339,9 +396,9 @@ sub load_preferences {
         "from billing.resellers r " .
         "join provisioning.voip_reseller_preferences v on v.reseller_id = r.id " .
         "join provisioning.voip_preferences a on a.id = v.attribute_id";
-    my $q = $dbh->prepare($stmt);
-    $q->execute();
-    while(my $res = $q->fetchrow_arrayref) {
+    my $sth = $dbh->prepare($stmt);
+    $sth->execute();
+    while(my $res = $sth->fetchrow_arrayref) {
         my ($reseller_id,$attribute,$max_occur,$value) = @$res;
         $reseller_preferences->{$reseller_id} = {} unless exists $reseller_preferences->{$reseller_id};
         my $preferences = $reseller_preferences->{$reseller_id};
@@ -357,7 +414,7 @@ sub load_preferences {
             load_rewrite_rules($preferences->{$attribute});
         }
     }
-    $q->finish();
+    $sth->finish();
 
 }
 
@@ -366,10 +423,10 @@ sub load_rewrite_rules {
     my ($rwrs_id) = @_;
     return if exists $rewrite_rule_sets->{$rwrs_id};
     my $stmt = "select * from provisioning.voip_rewrite_rules where set_id = ? order by priority asc";
-    my $q = $dbh->prepare($stmt);
-    $q->execute($rwrs_id);
+    my $sth = $dbh->prepare($stmt);
+    $sth->execute($rwrs_id);
     my %rules = ();
-    while(my $rule = $q->fetchrow_hashref) {
+    while (my $rule = $sth->fetchrow_hashref) {
         next unless $rule->{enabled}; # panel does not consider enabled?
         $rules{$rule->{direction}} = {} unless exists $rules{$rule->{direction}};
         my $directions = $rules{$rule->{direction}};
@@ -378,6 +435,7 @@ sub load_rewrite_rules {
         push(@$fields,$rule);
     }
     $rewrite_rule_sets->{$rwrs_id} = \%rules;
+    $sth->finish();
     return;
 
 }
@@ -396,7 +454,7 @@ sub apply_sclidui_rwrs {
             $row->[$i + $position_offset] = apply_rewrite(
                 number => $row->[$i + $position_offset],
                 dir => 'caller_out',
-                rwrs_id => prefval($reseller_id,'cdr_export_sclidui_rwrs_id'),
+                rwrs_id => prefval($reseller_id,'cdr_export_sclidui_rwrs_id') // 0,
             );
         }
     }
@@ -405,7 +463,7 @@ sub apply_sclidui_rwrs {
             $row->[$i + $position_offset] = apply_rewrite(
                 number => $row->[$i + $position_offset],
                 dir => 'callee_out',
-                rwrs_id => prefval($reseller_id,'cdr_export_sclidui_rwrs_id'),
+                rwrs_id => prefval($reseller_id,'cdr_export_sclidui_rwrs_id') // 0,
             );
         }
     }
@@ -544,12 +602,15 @@ sub run {
     my $sth = $dbh->prepare($q);
     $sth->execute();
     while(my $row = $sth->fetchrow_arrayref) {
+        #print $rec_in ."\n";
         $rec_in++;
         my @admin_row = @$row[0 .. $last_admin_field];
         my @res_row = @$row[@reseller_positions];
         my @data_row = @$row[@data_positions];
         $cb->(\@admin_row, \@res_row, \@data_row);
+        $dbh->ping() if ($rec_in % 10000 == 0);
     }
+    $sth->finish();
 
     for my $key (keys(%reseller_counts)) {
         ilog('info', "Wrote $reseller_counts{$key} records for reseller $key");
@@ -594,7 +655,8 @@ sub write_wrap {
         $mark_query = [ $reseller_ids{$reseller} ];
     }
     if (!defined($mark{"lastseq".$reseller_contract_id})) {
-        my $tmpmark = NGCP::CDR::Export::get_mark($dbh, $collid, $mark_query);
+        my $tmpmark = NGCP::CDR::Export::get_mark($dbh,
+            ($stream eq 'default' ? $exporter_type : $stream), $mark_query);
         %mark = ( %mark, %$tmpmark );
         $mark{"lastseq".$reseller_contract_id} //= 0;
     }
@@ -656,7 +718,7 @@ sub write_wrap {
             NGCP::CDR::Export::chownmod($dst, confval('FILES_OWNER'),
                 confval('FILES_GROUP'), oct(666),
                 confval('FILES_MASK'));
-            if(confval('TRANSFER_TYPE') eq "sftp") {
+            if((confval('TRANSFER_TYPE') // '') eq "sftp") {
                 NGCP::CDR::Transfer::sftp(
                     $dst, confval('TRANSFER_HOST'),
                     confval('TRANSFER_PORT'),
@@ -664,7 +726,7 @@ sub write_wrap {
                     confval('TRANSFER_USER'),
                     confval('TRANSFER_PASS'),
                 );
-            } elsif(confval('TRANSFER_TYPE') eq "sftp-sh") {
+            } elsif ((confval('TRANSFER_TYPE') // '') eq "sftp-sh") {
                 NGCP::CDR::Transfer::sftp_sh(
                     $dst, confval('TRANSFER_HOST'),
                     confval('TRANSFER_PORT'),
@@ -676,7 +738,8 @@ sub write_wrap {
         }
     }
     $mark{"lastseq".$reseller_contract_id} = $file_idx;
-    NGCP::CDR::Export::set_mark($dbh, $collid, { "lastseq$reseller_contract_id" => $file_idx });
+    NGCP::CDR::Export::set_mark($dbh, ($stream eq 'default' ? $exporter_type : $stream),
+        { "lastseq$reseller_contract_id" => $file_idx });
     close($fh);
 }
 
@@ -706,7 +769,7 @@ sub update_export_status {
 }
 
 sub upsert_export_status {
-    NGCP::CDR::Export::upsert_export_status($dbh, @_);
+    NGCP::CDR::Export::upsert_export_status($dbh, $stream, @_);
 }
 
 sub commit {
