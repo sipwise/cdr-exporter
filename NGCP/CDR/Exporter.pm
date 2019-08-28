@@ -26,7 +26,7 @@ BEGIN {
         quote_field
         write_reseller
         write_reseller_id
-        prepare_dbh
+        build_query
         load_preferences
         apply_sclidui_rwrs
         prefval
@@ -196,12 +196,15 @@ sub prepare_config {
     # backwards compat
     $config{$stream . '.DESTDIR'} //= $config{$stream . '.CDRDIR'} // $config{$stream . '.EDRDIR'};
 
-    # use constants from default, if missing:
-    $config{$stream . '.PREFIX'} //= $config{'default.PREFIX'};
-    $config{$stream . '.DBDB'} //= $config{'default.DBDB'};
-    $config{$stream . '.VERSION'} //= $config{'default.VERSION'};
+    if ($stream ne 'default') {
+        # use constants from default, if missing:
+        $config{$stream . '.PREFIX'} //= $config{'default.PREFIX'};
+        $config{$stream . '.DBDB'} //= $config{'default.DBDB'};
+        $config{$stream . '.VERSION'} //= $config{'default.VERSION'};
+    }
 
-    #$config{$stream . '.DBHOST'} = '192.168.0.213';
+    #test overrides:
+    #$config{$stream . '.DBHOST'} = '192.168.0.29';
     #$config{$stream . '.DBUSER'} = 'root';
     #$config{$stream . '.DBPASS'} = '';
     #$config{$stream . '.TRANSFER_REMOTE'} = "/home/rkrenn/temp/cdrexportstreams/cdrexport";
@@ -329,16 +332,16 @@ sub extract_field_positions {
     return @positions;
 };
 
-sub prepare_dbh {
+sub build_query {
     my ($trailer, $table, $prepend_default_cond_code) = @_;
 
-    $dbh = DBI->connect("dbi:mysql:" . confval('DBDB') .
-        ";host=".confval('DBHOST'),
-        confval('DBUSER'), confval('DBPASS'))
-        or die "failed to connect to db: $DBI::errstr";
-
-    #$dbh->{mysql_auto_reconnect} = 1;
-    $dbh->{AutoCommit} = 0;
+    unless ($dbh) {
+        $dbh = DBI->connect("dbi:mysql:" . confval('DBDB') .
+            ";host=".confval('DBHOST'),
+            confval('DBUSER'), confval('DBPASS'))
+            or die "failed to connect to db: $DBI::errstr";
+        $dbh->{AutoCommit} = 0;
+    }
 
     my @intjoins = ();
     my @conds = ();
@@ -600,7 +603,7 @@ sub run {
 
     my $rec_in = 0;
     my $sth = $dbh->prepare($q);
-    $sth->execute();
+    $sth->execute() or die "Query failed: " . $sth->errstr;
     while(my $row = $sth->fetchrow_arrayref) {
         #print $rec_in ."\n";
         $rec_in++;
@@ -620,6 +623,8 @@ sub run {
     }
 
     ilog('info', 'Finished processing records');
+
+    return $rec_in;
 }
 
 sub write_reseller {
