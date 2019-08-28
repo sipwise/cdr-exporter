@@ -26,7 +26,7 @@ BEGIN {
         quote_field
         write_reseller
         write_reseller_id
-        prepare_dbh
+        build_query
         load_preferences
         apply_sclidui_rwrs
         prefval
@@ -329,16 +329,16 @@ sub extract_field_positions {
     return @positions;
 };
 
-sub prepare_dbh {
+sub build_query {
     my ($trailer, $table, $prepend_default_cond_code) = @_;
 
-    $dbh = DBI->connect("dbi:mysql:" . confval('DBDB') .
-        ";host=".confval('DBHOST'),
-        confval('DBUSER'), confval('DBPASS'))
-        or die "failed to connect to db: $DBI::errstr";
-
-    #$dbh->{mysql_auto_reconnect} = 1;
-    $dbh->{AutoCommit} = 0;
+    unless ($dbh) {
+        $dbh = DBI->connect("dbi:mysql:" . confval('DBDB') .
+            ";host=".confval('DBHOST'),
+            confval('DBUSER'), confval('DBPASS'))
+            or die "failed to connect to db: $DBI::errstr";
+        $dbh->{AutoCommit} = 0;
+    }
 
     my @intjoins = ();
     my @conds = ();
@@ -620,6 +620,8 @@ sub run {
     }
 
     ilog('info', 'Finished processing records');
+
+    return $rec_in;
 }
 
 sub write_reseller {

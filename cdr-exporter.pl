@@ -9,9 +9,9 @@ use NGCP::CDR::Exporter;
 
 die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
 
+my $limit = 300000;
 my @trailer = (
     { 'order by' => 'accounting.cdr.id' },
-    { 'limit' => '300000' },
 );
 
 my @ignored_ids;
@@ -34,14 +34,10 @@ foreach my $stream (NGCP::CDR::Exporter::import_config('cdr-exporter.conf')) {
     @ignored_ids = ();
     @ids = ();
 
-    NGCP::CDR::Exporter::prepare_dbh(\@trailer, 'accounting.cdr', sub {
+    my $last_cdr_id = 0;
+    NGCP::CDR::Exporter::build_query([ @trailer, { 'limit' => $limit }, ] , 'accounting.cdr', sub {
         my ($dbh,$joins,$conds) = @_;
         # for the default stream, we keep expecting the export_status condition defined in config.yml,
-        # therefor leave this commented out:
-        # if ('default' eq $stream) {
-        #     push @$conds, "accounting.cdr.export_status = 'unexported'";
-        # } else {
-        #
         # but custom streams need to be registered and the export_status cond is added implicitly:
         if ('default' ne $stream) {
             my $stmt = "insert into accounting.cdr_export_status (id,type) values (null,?)" .
@@ -49,15 +45,30 @@ foreach my $stream (NGCP::CDR::Exporter::import_config('cdr-exporter.conf')) {
             $dbh->do($stmt, undef, $stream) or die "Failed to register stream '$stream'";
             my $export_status_id = $dbh->{'mysql_insertid'};
 
+            $stmt = "select coalesce(max(cdr_id),0) from accounting.cdr_export_status_data" .
+                " where status_id = ?";
+            my $sth = $dbh->prepare($stmt);
+            $sth->execute($export_status_id) or die "Failed to obtain last processed cdr id of stream '$stream'";
+            ($last_cdr_id) = $sth->fetchrow_array();
+            $sth->finish();
+
             push @$joins, "left join accounting.cdr_export_status_data as __cesd" .
                 " on __cesd.cdr_id = accounting.cdr.id and __cesd.status_id = " . $export_status_id;
-            push @$conds, "(__cesd.export_status = 'unexported' or __cesd.export_status is null)";
+            push @$conds, "accounting.cdr.id <= $last_cdr_id";
+            push @$conds, "__cesd.export_status = 'unexported'";
         }
     });
     NGCP::CDR::Exporter::load_preferences();
     NGCP::CDR::Exporter::prepare_output();
 
-    NGCP::CDR::Exporter::run(\&callback);
+    $limit = $limit - NGCP::CDR::Exporter::run(\&callback);
+    if ('default' ne $stream and $limit > 0) {
+        NGCP::CDR::Exporter::build_query([ @trailer, { 'limit' => $limit }, ], 'accounting.cdr', sub {
+            my ($dbh,$joins,$conds) = @_;
+            push @$conds, "accounting.cdr.id > $last_cdr_id";
+        });
+        NGCP::CDR::Exporter::run(\&callback);
+    }
 
     #DEBUG "ignoring cdr ids " . (join "$sep", @ignored_ids);
 
