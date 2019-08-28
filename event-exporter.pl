@@ -32,7 +32,7 @@ my @trailer = (
     { 'limit' => '3000' },
 );
 
-NGCP::CDR::Exporter::prepare_dbh(\@trailer, 'accounting.events');
+NGCP::CDR::Exporter::build_query(\@trailer, 'accounting.events');
 NGCP::CDR::Exporter::load_preferences();
 NGCP::CDR::Exporter::prepare_output();
 
