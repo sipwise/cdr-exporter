@@ -52,11 +52,11 @@ sub update_export_status {
 }
 
 sub upsert_export_status {
-    my ($dbh, $stream, $ids, $status) = @_;
+    my ($dbh, $stream, $tbl, $estbl, $ids, $status) = @_;
     return unless(@{ $ids });
     while (my @chunk = splice @$ids, 0, 10000) {
-        my $sth = $dbh->prepare("insert into accounting.cdr_export_status_data " .
-          "select _cdr.id,_cesc.id,now(),\"$status\",_cdr.start_time from accounting.cdr _cdr " .
+        my $sth = $dbh->prepare("insert into $estbl " .
+          "select _cdr.id,_cesc.id,now(),\"$status\",_cdr.start_time from $tbl _cdr " .
           "join (select * from accounting.cdr_export_status where type = \"$stream\") as _cesc " .
           "where _cdr.id in (" . substr(',?' x scalar @chunk,1) . ") " .
           "on duplicate key update export_status = \"$status\", exported_at = now()");

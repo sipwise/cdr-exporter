@@ -21,14 +21,22 @@ my $config = {
 NGCP::CDR::Exporter::import_config('event-exporter.conf');
 NGCP::CDR::Exporter::prepare_config('eventexporter', undef, $config);
 
+NGCP::CDR::Exporter::DEBUG("+++ Start event export with DB " .
+    (confval('DBUSER') || "(undef)") .
+    "\@".confval('DBDB')." to ".confval('DESTDIR')."\n");
+
 # make sure we always select id, subscriber_id, type, old and new;
 # if you change it, make sure to adapt slice in the loop too!
 unshift @NGCP::CDR::Exporter::admin_fields, (qw/
-    accounting.events.id accounting.events.subscriber_id accounting.events.reseller_id
-    accounting.events.type accounting.events.old_status accounting.events.new_status
+    base_table.id
+    base_table.subscriber_id
+    base_table.reseller_id
+    base_table.type
+    base_table.old_status
+    base_table.new_status
 /);
 my @trailer = (
-    { 'order by' => 'accounting.events.id' },
+    { 'order by' => 'base_table.id' },
     { 'limit' => '3000' },
 );
 

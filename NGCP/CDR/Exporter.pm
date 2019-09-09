@@ -68,7 +68,8 @@ my $stream = "default";
 my %config = (
     'default.FILTER_FLAPPING' => 0,
     'default.MERGE_UPDATE' => 0,
-    'default.ENABLED' => 1,
+    'default.ENABLED' => "yes",
+    'default.INTERMEDIATE' => "no",
     'default.PREFIX' => 'ngcp',
     'default.VERSION' => '007',
     'default.SUFFIX' => 'cdr',
@@ -95,12 +96,22 @@ my $rewrite_rule_sets = {};
 
 my $field_positions = {
     source_cli => {
-        aliases => [ qw(source_cli accounting.cdr.source_cli cdr.source_cli) ],
+        aliases => [ qw(source_cli
+                        accounting.cdr.source_cli
+                        cdr.source_cli
+                        accounting.int_cdr.source_cli
+                        int_cdr.source_cli
+                        base_table.source_cli) ],
         admin_positions => undef,
         reseller_positions => undef,
     },
     destination_user_in => {
-        aliases => [ qw(destination_user_in accounting.cdr.destination_user_in cdr.destination_user_in) ],
+        aliases => [ qw(destination_user_in
+                        accounting.cdr.destination_user_in
+                        cdr.destination_user_in
+                        accounting.int_cdr.destination_user_in
+                        int_cdr.destination_user_in
+                        base_table.destination_user_in) ],
         admin_positions => undef,
         reseller_positions => undef,
     },
@@ -188,8 +199,13 @@ sub prepare_config {
     $stream //= 'default';
 
     if (defined $conf_upd) {
-        for my $key (%$conf_upd) {
-            $config{$stream . '.' . $key} = $$conf_upd{$key};
+        for my $key (keys %$conf_upd) {
+            my $upd = $$conf_upd{$key};
+            if ('CODE' eq ref $upd) {
+                $config{$stream . '.' . $key} = &$upd($config{$stream . '.' . $key});
+            } else {
+                $config{$stream . '.' . $key} = $$conf_upd{$key};
+            }
         }
     }
 
@@ -384,7 +400,7 @@ sub build_query {
     }
 
     $q = "select " .
-        join(", ", @admin_fields) . " from $table " .
+        join(", ", @admin_fields) . " from $table base_table " .
         join(" ", @intjoins) . " " .
         "where " . join(" and ", @conds) . " " .
         join(" ", @trail);

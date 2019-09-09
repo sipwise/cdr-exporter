@@ -9,19 +9,24 @@ use NGCP::CDR::Exporter;
 
 die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
 
-my $stream_limit = 300000;
+my $stream_limit = 50000;
 my @trailer = (
     { 'order by' => 'base_table.id' },
 );
 
+my $config = {
+    'SUFFIX' => sub { return 'intermediate.' . shift; },
+};
+
 my @ignored_ids;
 my @ids;
 
-foreach my $stream (NGCP::CDR::Exporter::import_config('cdr-exporter.conf')) {
+foreach my $stream (NGCP::CDR::Exporter::import_config('int-cdr-exporter.conf')) {
     #next if $stream eq 'default';
     next unless (confval("ENABLED") // 'no') eq 'yes';
-    NGCP::CDR::Exporter::prepare_config('exporter', $stream);
-    NGCP::CDR::Exporter::DEBUG("+++ Start cdr export stream '$stream' with DB " .
+    next unless (confval("INTERMEDIATE") // 'no') eq 'yes';
+    NGCP::CDR::Exporter::prepare_config('intexporter', $stream, $config);
+    NGCP::CDR::Exporter::DEBUG("+++ Start intermediate cdr export stream '$stream' with DB " .
         (confval('DBUSER') || "(undef)") .
         "\@".confval('DBDB')." to ".confval('DESTDIR')."\n");
     # add fields we definitely need, will be removed during processing
@@ -37,24 +42,22 @@ foreach my $stream (NGCP::CDR::Exporter::import_config('cdr-exporter.conf')) {
 
     my $last_cdr_id = 0;
     my $limit = $stream_limit;
-    NGCP::CDR::Exporter::build_query([ @trailer, { 'limit' => $limit }, ] , 'accounting.cdr', sub {
+    NGCP::CDR::Exporter::build_query([ @trailer, { 'limit' => $limit }, ] , 'accounting.int_cdr', sub {
         my ($dbh,$joins,$conds) = @_;
-        # for the default stream, we keep expecting the export_status condition defined in config.yml,
-        # but custom streams need to be registered and the export_status cond is added implicitly:
         if ('default' ne $stream) {
             my $stmt = "insert into accounting.cdr_export_status (id,type) values (null,?)" .
                 " on duplicate key update id = last_insert_id(id)";
             $dbh->do($stmt, undef, $stream) or die "Failed to register stream '$stream'";
             my $export_status_id = $dbh->{'mysql_insertid'};
 
-            $stmt = "select coalesce(max(cdr_id),0) from accounting.cdr_export_status_data" .
+            $stmt = "select coalesce(max(cdr_id),0) from accounting.int_cdr_export_status_data" .
                 " where status_id = ?";
             my $sth = $dbh->prepare($stmt);
             $sth->execute($export_status_id) or die "Failed to obtain last processed cdr id of stream '$stream'";
             ($last_cdr_id) = $sth->fetchrow_array();
             $sth->finish();
 
-            push @$joins, "left join accounting.cdr_export_status_data as __cesd" .
+            push @$joins, "left join accounting.int_cdr_export_status_data as __cesd" .
                 " on __cesd.cdr_id = base_table.id and __cesd.status_id = " . $export_status_id;
             push @$conds, "base_table.id <= $last_cdr_id";
             push @$conds, "__cesd.export_status = 'unexported'";
@@ -65,7 +68,7 @@ foreach my $stream (NGCP::CDR::Exporter::import_config('cdr-exporter.conf')) {
 
     $limit = $limit - NGCP::CDR::Exporter::run(\&callback);
     if ('default' ne $stream and $limit > 0) {
-        NGCP::CDR::Exporter::build_query([ @trailer, { 'limit' => $limit }, ], 'accounting.cdr', sub {
+        NGCP::CDR::Exporter::build_query([ @trailer, { 'limit' => $limit }, ], 'accounting.int_cdr', sub {
             my ($dbh,$joins,$conds) = @_;
             push @$conds, "base_table.id > $last_cdr_id";
         });
@@ -77,13 +80,13 @@ foreach my $stream (NGCP::CDR::Exporter::import_config('cdr-exporter.conf')) {
     NGCP::CDR::Exporter::finish();
 
     if ('default' eq $stream) {
-        update_export_status("accounting.cdr", \@ids, "ok");
+        update_export_status("accounting.int_cdr", \@ids, "ok");
         # TODO: should be tagged as ignored/skipped/whatever
-        update_export_status("accounting.cdr", \@ignored_ids, "ok");
+        update_export_status("accounting.int_cdr", \@ignored_ids, "ok");
     } else {
-        upsert_export_status("accounting.cdr", "accounting.cdr_export_status_data", \@ids, "ok");
+        upsert_export_status("accounting.int_cdr", "accounting.int_cdr_export_status_data", \@ids, "ok");
         # TODO: should be tagged as ignored/skipped/whatever
-        upsert_export_status("accounting.cdr", "accounting.cdr_export_status_data", \@ignored_ids, "ok");
+        upsert_export_status("accounting.int_cdr", "accounting.int_cdr_export_status_data", \@ignored_ids, "ok");
     }
 
     NGCP::CDR::Exporter::commit();
