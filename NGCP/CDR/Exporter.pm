@@ -68,7 +68,8 @@ my $stream = "default";
 my %config = (
     'default.FILTER_FLAPPING' => 0,
     'default.MERGE_UPDATE' => 0,
-    'default.ENABLED' => 1,
+    'default.ENABLED' => "yes",
+    'default.INTERMEDIATE' => "no",
     'default.PREFIX' => 'ngcp',
     'default.VERSION' => '007',
     'default.SUFFIX' => 'cdr',
@@ -95,12 +96,12 @@ my $rewrite_rule_sets = {};
 
 my $field_positions = {
     source_cli => {
-        aliases => [ qw(source_cli accounting.cdr.source_cli cdr.source_cli) ],
+        aliases => [ qw(source_cli accounting.cdr.source_cli cdr.source_cli accounting.int_cdr.source_cli int_cdr.source_cli) ],
         admin_positions => undef,
         reseller_positions => undef,
     },
     destination_user_in => {
-        aliases => [ qw(destination_user_in accounting.cdr.destination_user_in cdr.destination_user_in) ],
+        aliases => [ qw(destination_user_in accounting.cdr.destination_user_in cdr.destination_user_in accounting.int_cdr.destination_user_in int_cdr.destination_user_in) ],
         admin_positions => undef,
         reseller_positions => undef,
     },
@@ -114,6 +115,7 @@ sub ERR {
 }
 
 my @config_paths = (qw#
+    /home/rkrenn/temp/cdrexportstreams/
     /etc/ngcp-cdr-exporter/
     .
 #);
@@ -188,8 +190,13 @@ sub prepare_config {
     $stream //= 'default';
 
     if (defined $conf_upd) {
-        for my $key (%$conf_upd) {
-            $config{$stream . '.' . $key} = $$conf_upd{$key};
+        for my $key (keys %$conf_upd) {
+            my $upd = $$conf_upd{$key};
+            if ('CODE' eq ref $upd) {
+                $config{$stream . '.' . $key} = &$upd($config{$stream . '.' . $key});
+            } else {
+                $config{$stream . '.' . $key} = $$conf_upd{$key};
+            }
         }
     }
 
@@ -204,11 +211,11 @@ sub prepare_config {
     }
 
     #test overrides:
-    #$config{$stream . '.DBHOST'} = '192.168.0.29';
-    #$config{$stream . '.DBUSER'} = 'root';
-    #$config{$stream . '.DBPASS'} = '';
-    #$config{$stream . '.TRANSFER_REMOTE'} = "/home/rkrenn/temp/cdrexportstreams/cdrexport";
-    #$config{$stream . '.DESTDIR'} = "/home/rkrenn/temp/cdrexportstreams/cdrexport";
+    $config{$stream . '.DBHOST'} = '192.168.30.129';
+    $config{$stream . '.DBUSER'} = 'root';
+    $config{$stream . '.DBPASS'} = '';
+    $config{$stream . '.TRANSFER_REMOTE'} = "/home/rkrenn/temp/cdrexportstreams/cdrexport";
+    $config{$stream . '.DESTDIR'} = "/home/rkrenn/temp/cdrexportstreams/cdrexport";
 
     die "Invalid destination directory '".$config{$stream . '.DESTDIR'}."'\n"
         unless(-d $config{$stream . '.DESTDIR'});
@@ -384,7 +391,7 @@ sub build_query {
     }
 
     $q = "select " .
-        join(", ", @admin_fields) . " from $table " .
+        join(", ", @admin_fields) . " from $table base_table " .
         join(" ", @intjoins) . " " .
         "where " . join(" and ", @conds) . " " .
         join(" ", @trail);
