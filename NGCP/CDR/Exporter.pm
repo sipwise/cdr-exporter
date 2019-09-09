@@ -189,7 +189,12 @@ sub prepare_config {
 
     if (defined $conf_upd) {
         for my $key (%$conf_upd) {
-            $config{$stream . '.' . $key} = $$conf_upd{$key};
+            my $upd = $$conf_upd{$key};
+            if ('CODE' eq ref $upd) {
+                $config{$stream . '.' . $key} = &$upd($config{$stream . '.' . $key});
+            } else {
+                $config{$stream . '.' . $key} = $$conf_upd{$key};
+            }
         }
     }
 
@@ -384,7 +389,7 @@ sub build_query {
     }
 
     $q = "select " .
-        join(", ", @admin_fields) . " from $table " .
+        join(", ", @admin_fields) . " from $table base_table " .
         join(" ", @intjoins) . " " .
         "where " . join(" and ", @conds) . " " .
         join(" ", @trail);
