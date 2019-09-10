@@ -661,7 +661,7 @@ sub write_wrap {
     }
     if (!defined($mark{"lastseq".$reseller_contract_id})) {
         my $tmpmark = NGCP::CDR::Export::get_mark($dbh,
-            ($stream eq 'default' ? $exporter_type : $stream), $mark_query);
+            ($stream eq 'default' ? $exporter_type : ($exporter_type . '-' . $stream)), $mark_query);
         %mark = ( %mark, %$tmpmark );
         $mark{"lastseq".$reseller_contract_id} //= 0;
     }
@@ -743,7 +743,7 @@ sub write_wrap {
         }
     }
     $mark{"lastseq".$reseller_contract_id} = $file_idx;
-    NGCP::CDR::Export::set_mark($dbh, ($stream eq 'default' ? $exporter_type : $stream),
+    NGCP::CDR::Export::set_mark($dbh, ($stream eq 'default' ? $exporter_type : ($exporter_type . '-' . $stream)),
         { "lastseq$reseller_contract_id" => $file_idx });
     close($fh);
 }
