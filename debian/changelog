@@ -1,3 +1,9 @@
+ngcp-cdr-exporter (8.2.0.0+0~mr8.2.0.0) unstable; urgency=medium
+
+  * New release.
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 25 Nov 2019 14:52:10 +0100
+
 ngcp-cdr-exporter (8.1.0.0+0~mr8.1.0.0) unstable; urgency=medium
 
   [ Rene Krenn ]
