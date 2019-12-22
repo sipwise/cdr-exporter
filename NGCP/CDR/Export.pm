@@ -81,9 +81,9 @@ sub get_reseller_name {
 
 sub get_missing_resellers {
     my ($dbh, $cids) = @_;
-    my $stmt = "select name, $reseller_id_col from billing.resellers";
+    my $stmt = "select name, $reseller_id_col from billing.resellers where status != \"terminated\"";
     if(@{ $cids }) {
-        $stmt .= " where $reseller_id_col not in (" . join (',', map { '?' }(1 .. @{ $cids }) ) . ") and status != \"terminated\"";
+        $stmt .= " and $reseller_id_col not in (" . join (',', map { '?' }(1 .. @{ $cids }) ) . ")";
     }
     my $sth = $dbh->prepare($stmt);
     $sth->execute(@{ $cids });
