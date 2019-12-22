@@ -758,10 +758,10 @@ sub write_wrap {
             }
         }
     }
+    close($fh);
     $mark{"lastseq".$reseller_contract_id} = $file_idx;
     NGCP::CDR::Export::set_mark($dbh, ($stream eq 'default' ? $exporter_type : ($exporter_type . '-' . $stream)),
         { "lastseq$reseller_contract_id" => $file_idx });
-    close($fh);
 }
 
 sub finish {
