@@ -86,6 +86,7 @@ my %config = (
     'default.CSV_ESC' => "\\",
     'default.CSV_HEADER' => '${version},${lines,%04i}',
     'default.CSV_FOOTER' => '${checksum}',
+    'default.WRITE_EMPTY' => "yes",
 );
 
 # specify 'system' default reseller preferences:
@@ -771,6 +772,8 @@ sub finish {
     for my $reseller (@resellers) {
         write_wrap($reseller, 1);
     }
+
+    return unless (defined confval('WRITE_EMPTY') && confval('WRITE_EMPTY') eq "yes");
 
     # we write empty cdrs for resellers which didn't have a call during this
     # export run, so get them into the list
