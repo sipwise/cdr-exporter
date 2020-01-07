@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2160201_f63d35c2",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 2
+      },
+      "lineNbr": 776,
+      "author": {
+        "id": 1000008
+      },
+      "writtenOn": "2020-01-07T15:10:15Z",
+      "side": 1,
+      "message": "Does this trailing ?1:0 make sense? Seems more confusing than useful to me.",
+      "range": {
+        "startLine": 776,
+        "startChar": 85,
+        "endLine": 776,
+        "endChar": 93
+      },
+      "revId": "b919594728f4cba79dea4797b1fcf0c5fe2a0eee",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": true
+    }
+  ]
+}
