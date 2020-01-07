@@ -22,6 +22,30 @@
       "revId": "b919594728f4cba79dea4797b1fcf0c5fe2a0eee",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5921dc0c_2c4dd4e0",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 2
+      },
+      "lineNbr": 776,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2020-01-07T15:15:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c2160201_f63d35c2",
+      "range": {
+        "startLine": 776,
+        "startChar": 85,
+        "endLine": 776,
+        "endChar": 93
+      },
+      "revId": "b919594728f4cba79dea4797b1fcf0c5fe2a0eee",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
     }
   ]
 }
