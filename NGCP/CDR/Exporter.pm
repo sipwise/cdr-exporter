@@ -14,12 +14,14 @@ use File::Path;
 use NGCP::CDR::Transfer;
 use Data::Dumper;
 use Sys::Syslog;
+use Proc::ProcessTable qw();
 
 BEGIN {
     require Exporter;
     our @ISA = qw(Exporter);
     our @EXPORT = qw(
         DEBUG
+        find_processes
         import_config
         prepare_config
         confval
@@ -148,6 +150,21 @@ sub get_config_fields {
         push @ret, $f;
     }
     return @ret;
+}
+
+sub find_processes {
+    my $re = shift;
+    my $pt = Proc::ProcessTable->new();
+    my @result = ();
+    foreach my $p (@{$pt->table}){
+        if ($p->cmndline =~ $re) {
+            push(@result, {
+                pid => $p->pid,
+                start => $p->start,
+            });
+        }
+    }
+    return @result;
 }
 
 sub import_config {

@@ -8,6 +8,7 @@ use Fcntl qw(LOCK_EX LOCK_NB);
 use NGCP::CDR::Exporter;
 
 die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
+exit if scalar find_processes(qr/ngcp-cleanup-acc/);
 
 $NGCP::CDR::Export::reseller_id_col = 'id';
 
