@@ -46,6 +46,30 @@
       "revId": "5e8af91e467a9286b842c073d3a89e836cf52dbc",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1945eb96_c64cf349",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000008
+      },
+      "writtenOn": "2020-01-21T14:04:28Z",
+      "side": 1,
+      "message": "Ah yeah, no just to process the list returned by ProcessTable I mean. Something like\n\n@result \u003d map { { $_... } } grep { $_-\u003ecmndline \u003d~ ... } @{$pt-\u003etable}\n\nbut it\u0027s fine either way.",
+      "parentUuid": "021c21ea_bb7218b1",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 166,
+        "endChar": 5
+      },
+      "revId": "5e8af91e467a9286b842c073d3a89e836cf52dbc",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": true
     }
   ]
 }
