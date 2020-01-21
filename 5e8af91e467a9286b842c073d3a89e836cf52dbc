@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4dbd9dc7_2ec5e895",
+        "filename": "NGCP/CDR/Exporter.pm",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000008
+      },
+      "writtenOn": "2020-01-21T13:55:11Z",
+      "side": 1,
+      "message": "The nerd in me immediately sees this as a combination of grep and map instead :)",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 166,
+        "endChar": 5
+      },
+      "revId": "5e8af91e467a9286b842c073d3a89e836cf52dbc",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": true
+    }
+  ]
+}
