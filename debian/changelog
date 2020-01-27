@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (8.2.1.0+0~mr8.2.1.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [f3adaa3] TT#72753 fix writing empty .cdr for terminated resellers
+  * [e8d3833] TT#73539 option to disable writing empty files
+  * [5e8af91] TT#74404 no export while acc-cleanup is running
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 27 Jan 2020 12:18:49 +0100
+
 ngcp-cdr-exporter (8.2.0.0+0~mr8.2.0.0) unstable; urgency=medium
 
   * New release.
