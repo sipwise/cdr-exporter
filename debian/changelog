@@ -1,3 +1,10 @@
+ngcp-cdr-exporter (8.1.2.1+0~mr8.1.2.1) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [52a72b1] TT#72753 fix writing empty .cdr for terminated resellers
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 09 Mar 2020 11:01:46 +0100
+
 ngcp-cdr-exporter (8.1.2.0+0~mr8.1.2.0) unstable; urgency=medium
 
   * New release.
