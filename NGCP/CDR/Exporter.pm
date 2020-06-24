@@ -491,7 +491,7 @@ sub apply_sclidui_rwrs {
             $row->[$i + $position_offset] = apply_rewrite(
                 number => $row->[$i + $position_offset],
                 dir => 'caller_out',
-                rwrs_id => prefval($reseller_id,'cdr_export_sclidui_rwrs_id') // 0,
+                rwrs_id => (prefval($reseller_id,'cdr_export_sclidui_rwrs_id') // 0),
             );
         }
     }
@@ -500,7 +500,7 @@ sub apply_sclidui_rwrs {
             $row->[$i + $position_offset] = apply_rewrite(
                 number => $row->[$i + $position_offset],
                 dir => 'callee_out',
-                rwrs_id => prefval($reseller_id,'cdr_export_sclidui_rwrs_id') // 0,
+                rwrs_id => (prefval($reseller_id,'cdr_export_sclidui_rwrs_id') // 0),
             );
         }
     }
