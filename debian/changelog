@@ -1,3 +1,13 @@
+ngcp-cdr-exporter (9.1.0.0+0~mr9.1.0.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [dea9285] TT#87454 fix "odd number in hash assignment" with rewriterules
+
+  [ Guillem Jover ]
+  * [4ef5221] TT#88050 Remove dependencies on obsolete packages
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 31 Aug 2020 21:52:32 +0200
+
 ngcp-cdr-exporter (9.0.0.0+0~mr9.0.0.0) unstable; urgency=medium
 
   * New release.
