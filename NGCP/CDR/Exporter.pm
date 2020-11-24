@@ -15,6 +15,7 @@ use NGCP::CDR::Transfer;
 use Data::Dumper;
 use Sys::Syslog;
 use Proc::ProcessTable qw();
+use MIME::Base64 qw(decode_base64);
 
 BEGIN {
     require Exporter;
@@ -45,8 +46,11 @@ my $exporter_type = "exporter";
 
 my $last_admin_field;
 our @admin_fields;
+our @admin_field_transformations;
 our @reseller_fields;
+our @reseller_field_transformations;
 our @data_fields;
+our @data_field_transformations;
 my @joins;
 my @conditions;
 my $dbh;
@@ -128,16 +132,102 @@ sub ERR {
 }
 
 my @config_paths = (qw#
+    /home/rkrenn/temp/cdrexporttransformations/
     /etc/ngcp-cdr-exporter/
     .
 #);
 #/home/rkrenn/temp/cdrexportstreams/
 
 sub config2array {
-    my $config_key = shift;
+    
+    my ($config_key,$serialized) = @_;
     my $val = confval($config_key);
-    ref($val) eq 'ARRAY' and return @$val;
+    if ('ARRAY' eq ref($val)) {
+        return @$val;
+    } elsif ($serialized) {
+        my $decoded = decode_base64($val);
+        die("invalid config value '$val': " . $@ . "\n") if $@;
+        #$decoded =~ s{\A\$VAR\d+\s*=\s*}{};
+        ## no critic (BuiltinFunctions::ProhibitStringyEval)
+        $val = eval($decoded);
+        die("invalid config value '$decoded': " . $@ . "\n") if $@;
+        if ('ARRAY' eq ref($val)) {
+            return @$val;
+        } elsif ('HASH' eq ref($val)) {
+            return %$val;
+        } elsif (ref($val)) {
+            die("'$decoded' is " . ref($val) . "\n");
+        }
+    }
     return $val;
+    
+}
+
+sub transform_value {
+    
+    my ($value,$transformation,$context) = @_;
+    if ($transformation) {
+        eval {
+            $value = $transformation->{sub}->($value,$context);
+        };
+        if ($@) {
+            warn("error transforming [$transformation->{name}] value '$value': " . $@ . "\n");
+        }
+    }
+    return $value;
+
+}
+
+sub create_transformation_context {
+    my ($row,$out,$static_context) = @_;
+    my $context = {
+        row => $row,
+        out => $out,
+        dbh => $dbh,
+        static => $static_context,
+    };
+    return $context;
+}
+
+sub get_export_fields {
+    my ($name,$transformations) = @_;
+    my @ret;
+    foreach my $f (config2array($name,1)) {
+        $f or next;
+        if ('HASH' eq ref $f) {
+            my $sql = $f->{sql};
+            $sql =~ s/^#.+//;
+            next unless($sql);
+            $sql =~ s/^\'//;
+            $sql =~ s/\'$//;
+            push @ret, $sql;
+            if ($transformations) {
+                if ($f->{code}) {
+                    ## no critic (BuiltinFunctions::ProhibitStringyEval)
+                    my $sub = eval($f->{code});
+                    die("[$f->{name}] code: " . $@ . "\n") if $@;
+                    die("[$f->{name}] code: not a function\n") unless 'CODE' eq ref $sub;
+                    push(@$transformations,{
+                        sub => $sub,
+                        code => $f->{code},
+                        name => $f->{name},
+                    });
+                } else {
+                    push(@$transformations,undef);
+                }
+            }
+        } else {
+            $f =~ s/^#.+//;
+            next unless($f);
+            $f =~ s/^\'//;
+            $f =~ s/\'$//;
+            push @ret, $f;
+            if ($transformations) {
+                push(@$transformations,undef);
+            }
+        }
+    }
+    return @ret;
 }
 
 sub get_config_fields {
@@ -238,18 +328,22 @@ sub prepare_config {
     }
 
     #test overrides:
-    #$config{$stream . '.DBHOST'} = '192.168.0.29';
-    #$config{$stream . '.DBUSER'} = 'root';
-    #$config{$stream . '.DBPASS'} = '';
-    #$config{$stream . '.TRANSFER_REMOTE'} = "/home/rkrenn/temp/cdrexportstreams/cdrexport";
-    #$config{$stream . '.DESTDIR'} = "/home/rkrenn/temp/cdrexportstreams/cdrexport";
+    $config{$stream . '.DBHOST'} = '192.168.0.180';
+    $config{$stream . '.DBUSER'} = 'root';
+    $config{$stream . '.DBPASS'} = '';
+    $config{$stream . '.TRANSFER_REMOTE'} = "/home/rkrenn/temp/cdrexporttransformations/cdrexport";
+    $config{$stream . '.DESTDIR'} = "/home/rkrenn/temp/cdrexporttransformations/cdrexport";
+    $config{$stream . '.EXPORT_CONDITIONS'} = "{ 'base_table.export_status' => { '=' => '\"unexported\"' } }";
 
     die "Invalid destination directory '".$config{$stream . '.DESTDIR'}."'\n"
         unless(-d $config{$stream . '.DESTDIR'});
 
-    @admin_fields = get_config_fields('ADMIN_EXPORT_FIELDS');
-    @reseller_fields = get_config_fields('RESELLER_EXPORT_FIELDS');
-    @data_fields = get_config_fields('DATA_FIELDS');
+    @admin_field_transformations = ();
+    @admin_fields = get_export_fields('ADMIN_EXPORT_FIELDS',\@admin_field_transformations);
+    @reseller_field_transformations = ();
+    @reseller_fields = get_export_fields('RESELLER_EXPORT_FIELDS',\@reseller_field_transformations);
+    @data_field_transformations = ();
+    @data_fields = get_export_fields('DATA_FIELDS',\@data_field_transformations);
 
     @joins = ();
     foreach my $f (get_config_fields('EXPORT_JOINS')) {
@@ -276,6 +370,7 @@ sub prepare_config {
         $d =~ s/^\s*\'//g; $d =~ s/\'\s*//;
         push @conditions, { $a => { $c => $d } };
     }
+    die "export conditions required\n" unless scalar @conditions;
 
     %reseller_names = ();
     %reseller_ids = ();
@@ -373,7 +468,7 @@ sub build_query {
         $dbh = DBI->connect("dbi:mysql:" . confval('DBDB') .
             ";host=".confval('DBHOST'),
             confval('DBUSER'), confval('DBPASS'))
-            or die "failed to connect to db: $DBI::errstr";
+            or die("failed to connect to db: " . $DBI::errstr . "\n");
         $dbh->{AutoCommit} = 0;
     }
 
@@ -601,7 +696,7 @@ sub get_dir_ts {
             }
             my $sth = $dbh->prepare('select second(start.ts),minute(start.ts),hour(start.ts),dayofmonth(start.ts),'.
                 'month(start.ts)-1,year(start.ts)-1900,dayofweek(start.ts)-1,dayofyear(start.ts)-1 from (' . $stmt . ') as start');
-            $sth->execute(@params); # or die($DBI::errstr);
+            $sth->execute(@params); # or die($DBI::errstr . "\n");
             @now = $sth->fetchrow_array;
             $sth->finish;
         } else {
@@ -637,13 +732,41 @@ sub run {
 
     my $rec_in = 0;
     my $sth = $dbh->prepare($q);
-    $sth->execute() or die "Query failed: " . $sth->errstr;
+    $sth->execute() or die("Query failed: " . $sth->errstr . "\n");
+    my $static_context = {};
     while(my $row = $sth->fetchrow_arrayref) {
         #print $rec_in ."\n";
         $rec_in++;
-        my @admin_row = @$row[0 .. $last_admin_field];
-        my @res_row = @$row[@reseller_positions];
-        my @data_row = @$row[@data_positions];
+        my @admin_row = ();
+        my $context = create_transformation_context($row,\@admin_row,$static_context);
+        foreach my $i (0 .. $last_admin_field) {
+            $context->{i} = $i;
+            push(@admin_row,transform_value(
+                $row->[$i],
+                $admin_field_transformations[$#admin_row + 1],
+                $context,
+            ));
+        }
+        my @res_row = ();
+        $context = create_transformation_context($row,\@res_row,$static_context);
+        foreach my $i (@reseller_positions) {
+            $context->{i} = $i;
+            push(@res_row,transform_value(
+                $row->[$i],
+                $reseller_field_transformations[$#res_row + 1],
+                $context,
+            ));
+        }
+        my @data_row = ();
+        $context = create_transformation_context($row,\@data_row,$static_context);
+        foreach my $i (@data_positions) {
+            $context->{i} = $i;
+            push(@data_row,transform_value(
+                $row->[$i],
+                $data_field_transformations[$#data_row + 1],
+                $context,
+            ));
+        }
         $cb->(\@admin_row, \@res_row, \@data_row);
         $dbh->ping() if ($rec_in % 10000 == 0);
     }
@@ -815,7 +938,7 @@ sub upsert_export_status {
 
 sub commit {
     ilog('info', 'Committing changes to database');
-    $dbh->commit or die("failed to commit db changes: " . $dbh->errstr);
+    $dbh->commit or die("failed to commit db changes: " . $dbh->errstr . "\n");
     ilog('info', 'All done');
 }
 

@@ -7,7 +7,7 @@ use Fcntl qw(LOCK_EX LOCK_NB);
 
 use NGCP::CDR::Exporter;
 
-die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
+die("$0 already running\n") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
 exit if scalar find_processes(qr/ngcp-cleanup-acc/);
 
 my $stream_limit = 300000;
@@ -26,13 +26,15 @@ foreach my $stream (NGCP::CDR::Exporter::import_config('cdr-exporter.conf')) {
         (confval('DBUSER') || "(undef)") .
         "\@".confval('DBDB')." to ".confval('DESTDIR')."\n");
     # add fields we definitely need, will be removed during processing
-    unshift @NGCP::CDR::Exporter::admin_fields, qw/
+    my @discriminators = qw/
         base_table.id
         base_table.source_user_id
         base_table.destination_user_id
         base_table.source_provider_id
         base_table.destination_provider_id
     /;
+    unshift @NGCP::CDR::Exporter::admin_fields, @discriminators;
+    unshift @NGCP::CDR::Exporter::admin_field_transformations, ((undef) x scalar @discriminators);
     @ignored_ids = ();
     @ids = ();
 
@@ -45,13 +47,13 @@ foreach my $stream (NGCP::CDR::Exporter::import_config('cdr-exporter.conf')) {
         if ('default' ne $stream) {
             my $stmt = "insert into accounting.cdr_export_status (id,type) values (null,?)" .
                 " on duplicate key update id = last_insert_id(id)";
-            $dbh->do($stmt, undef, $stream) or die "Failed to register stream '$stream'";
+            $dbh->do($stmt, undef, $stream) or die "Failed to register stream '$stream'\n";
             my $export_status_id = $dbh->{'mysql_insertid'};
 
             $stmt = "select coalesce(max(cdr_id),0) from accounting.cdr_export_status_data" .
                 " where status_id = ?";
             my $sth = $dbh->prepare($stmt);
-            $sth->execute($export_status_id) or die "Failed to obtain last processed cdr id of stream '$stream'";
+            $sth->execute($export_status_id) or die "Failed to obtain last processed cdr id of stream '$stream'\n";
             ($last_cdr_id) = $sth->fetchrow_array();
             $sth->finish();
 

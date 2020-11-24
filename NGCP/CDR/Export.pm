@@ -17,7 +17,7 @@ sub get_mark {
         push @ids, "lastseq-$id";
     }
     for my $mk(@ids) {
-        $s->execute("$name-$mk") or die($dbh->errstr);
+        $s->execute("$name-$mk") or die($dbh->errstr . "\n");
         my $r = $s->fetch;
         $marks{$mk} = ($r && $r->[0]) ? $r->[0] : 0;
     }
@@ -30,7 +30,7 @@ sub set_mark {
     my $i = $dbh->prepare("insert into accounting.mark (collector, acc_id) values(?,?)");
     my $u = $dbh->prepare("update accounting.mark set acc_id = ? where collector = ?");
     for my $mk (keys %{ $mark }) {
-        $s->execute("$name-$mk") or die($dbh->errstr);
+        $s->execute("$name-$mk") or die($dbh->errstr . "\n");
         my $r = $s->fetch;
         if($r && defined $r->[0]) {
             $u->execute($mark->{$mk}, "$name-$mk");
@@ -46,7 +46,7 @@ sub update_export_status {
     while (my @chunk = splice @$ids, 0, 10000) {
         my $sth = $dbh->prepare("update $tbl set export_status=?, exported_at=now()" .
           " where id in (" . substr(',?' x scalar @chunk,1) . ")");
-        $sth->execute($status, @chunk) or die($dbh->errstr);
+        $sth->execute($status, @chunk) or die($dbh->errstr . "\n");
         $sth->finish();
     }
 }
@@ -60,7 +60,7 @@ sub upsert_export_status {
           "join (select * from accounting.cdr_export_status where type = \"$stream\") as _cesc " .
           "where _cdr.id in (" . substr(',?' x scalar @chunk,1) . ") " .
           "on duplicate key update export_status = \"$status\", exported_at = now()");
-        $sth->execute(@chunk) or die($dbh->errstr);
+        $sth->execute(@chunk) or die($dbh->errstr . "\n");
         $sth->finish();
     }
 }
@@ -133,7 +133,7 @@ sub write_file {
     my $fn =  sprintf('%s/%s_%s_%s_%010i.%s', $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
     my $tfn = sprintf('%s/%s_%s_%s_%010i.%s.'.$$, $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
     my $fd;
-    open($fd, ">", $tfn) or die("failed to open tmp-file $tfn ($!), stop");
+    open($fd, ">", $tfn) or die("failed to open tmp-file $tfn ($!), stop\n");
     my $ctx = Digest::MD5->new;
 
     my $num = @{ $lines };
@@ -179,10 +179,10 @@ sub write_file {
     }
 
     NGCP::CDR::Exporter::DEBUG("$num data lines written to $tfn, checksum is $md5\n");
-    close($fd) or die ("failed to close tmp-file $tfn ($!), stop");
+    close($fd) or die ("failed to close tmp-file $tfn ($!), stop\n");
     undef($ctx);
 
-    rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop");
+    rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop\n");
     NGCP::CDR::Exporter::DEBUG("successfully moved $tfn to $fn\n");
 }
 

@@ -7,7 +7,7 @@ use Fcntl qw(LOCK_EX LOCK_NB);
 
 use NGCP::CDR::Exporter;
 
-die("$0 already running") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
+die("$0 already running\n") unless flock DATA, LOCK_EX | LOCK_NB; # not tested on windows yet
 exit if scalar find_processes(qr/ngcp-cleanup-acc/);
 
 $NGCP::CDR::Export::reseller_id_col = 'id';
@@ -28,14 +28,17 @@ NGCP::CDR::Exporter::DEBUG("+++ Start event export with DB " .
 
 # make sure we always select id, subscriber_id, type, old and new;
 # if you change it, make sure to adapt slice in the loop too!
-unshift @NGCP::CDR::Exporter::admin_fields, (qw/
+my @discriminators = qw/
     base_table.id
     base_table.subscriber_id
     base_table.reseller_id
     base_table.type
     base_table.old_status
     base_table.new_status
-/);
+/;
+unshift @NGCP::CDR::Exporter::admin_fields, @discriminators;
+unshift @NGCP::CDR::Exporter::admin_field_transformations, ((undef) x scalar @discriminators);
+
 my @trailer = (
     { 'order by' => 'base_table.id' },
     { 'limit' => '3000' },
