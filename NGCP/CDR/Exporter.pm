@@ -90,7 +90,7 @@ my %config = (
     'default.QUOTES' => "'",
     'default.CSV_SEP' => ',',
     'default.CSV_ESC' => "\\",
-    'default.CSV_HEADER' => '${version},${lines,%04i}',
+    'default.CSV_HEADER' => '${version},${rows,%04i}',
     'default.CSV_FOOTER' => '${checksum}',
     'default.WRITE_EMPTY' => "yes",
 );
@@ -132,10 +132,11 @@ sub ERR {
 }
 
 my @config_paths = (qw#
-    /home/rkrenn/temp/cdrexporttransformations/
     /etc/ngcp-cdr-exporter/
     .
 #);
+#/home/rkrenn/temp/eventexport/
+#/home/rkrenn/temp/cdrexporttransformations/
 #/home/rkrenn/temp/cdrexportstreams/
 
 sub config2array {
@@ -328,12 +329,12 @@ sub prepare_config {
     }
 
     #test overrides:
-    $config{$stream . '.DBHOST'} = '192.168.0.180';
-    $config{$stream . '.DBUSER'} = 'root';
-    $config{$stream . '.DBPASS'} = '';
-    $config{$stream . '.TRANSFER_REMOTE'} = "/home/rkrenn/temp/cdrexporttransformations/cdrexport";
-    $config{$stream . '.DESTDIR'} = "/home/rkrenn/temp/cdrexporttransformations/cdrexport";
-    $config{$stream . '.EXPORT_CONDITIONS'} = "{ 'base_table.export_status' => { '=' => '\"unexported\"' } }";
+    #$config{$stream . '.DBHOST'} = '192.168.0.241';
+    #$config{$stream . '.DBUSER'} = 'root';
+    #$config{$stream . '.DBPASS'} = '';
+    #$config{$stream . '.TRANSFER_REMOTE'} = "/home/rkrenn/temp/eventexport/cdrexport";
+    #$config{$stream . '.DESTDIR'} = "/home/rkrenn/temp/eventexport/cdrexport";
+    #$config{$stream . '.EXPORT_CONDITIONS'} = "{ 'base_table.export_status' => { '=' => '\"unexported\"' } }";
 
     die "Invalid destination directory '".$config{$stream . '.DESTDIR'}."'\n"
         unless(-d $config{$stream . '.DESTDIR'});
