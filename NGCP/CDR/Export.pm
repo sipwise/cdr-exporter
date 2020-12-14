@@ -144,6 +144,7 @@ sub write_file {
         my $str =
             apply_format($csv_header, {
                             rows      => $num,
+                            lines     => $num,
                             version   => $version,
                             checksum  => undef,
                             first_seq => $lastseq,
@@ -169,6 +170,7 @@ sub write_file {
         my $str =
             apply_format($csv_footer, {
                             rows      => $num,
+                            lines     => $num,
                             version   => $version,
                             checksum  => $md5,
                             first_seq => $lastseq,
