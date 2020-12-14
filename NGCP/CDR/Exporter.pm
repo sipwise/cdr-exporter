@@ -90,7 +90,7 @@ my %config = (
     'default.QUOTES' => "'",
     'default.CSV_SEP' => ',',
     'default.CSV_ESC' => "\\",
-    'default.CSV_HEADER' => '${version},${rows,%04i}',
+    'default.CSV_HEADER' => '${version},${lines,%04i}',
     'default.CSV_FOOTER' => '${checksum}',
     'default.WRITE_EMPTY' => "yes",
 );
