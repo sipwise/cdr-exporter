@@ -13,6 +13,7 @@ Depends:
  libclass-dbi-mysql-perl,
  libconfig-simple-perl,
  libio-pty-perl,
+ libmime-base64-perl,
  libnet-sftp-foreign-perl,
  libproc-processtable-perl,
  ${misc:Depends},
