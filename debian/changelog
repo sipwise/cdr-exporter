@@ -1,3 +1,13 @@
+ngcp-cdr-exporter (9.2.1.0+0~mr9.2.1.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [3e9eb3a] TT#102100 export field transformations
+  * [3703c16] TT#104850 fix default file header format (eventexporter)
+  * [dd3390c] TT#104850 support "lines" in header&footer format
+  * [e0431bd] TT#102100 add MIME::Base64 dependency
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Tue, 05 Jan 2021 15:29:52 +0100
+
 ngcp-cdr-exporter (9.2.0.0+0~mr9.2.0.0) unstable; urgency=medium
 
   * New release.
