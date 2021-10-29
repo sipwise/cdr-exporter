@@ -1,3 +1,10 @@
+ngcp-cdr-exporter (8.5.6.2+0~mr8.5.6.2) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [ed090d5] TT#104850 support "lines" in header&footer format
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Fri, 29 Oct 2021 15:57:48 +0200
+
 ngcp-cdr-exporter (8.5.6.1+0~mr8.5.6.1) unstable; urgency=medium
 
   * New release.
