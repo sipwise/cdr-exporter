@@ -1,7 +1,7 @@
 package NGCP::CDR::Export;
 
 use Digest::MD5;
-use DateTime;
+use Time::Piece;
 use warnings;
 use strict;
 
@@ -106,7 +106,7 @@ sub get_ts_for_filename {
         @now = @{ $xnow };
     } else {
         $now = time;
-        @now = localtime($now);
+        @now = localtime($now); #ok
     }
     return sprintf('%04i%02i%02i%02i%02i%02i',
         $now[5] + 1900, $now[4] + 1, @now[3,2,1,0]);
@@ -196,10 +196,7 @@ sub apply_format {
     my @m_formats = ();
     my $applied = $str;
 
-    my @dt_seq = $data->{_ts} =~ /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/;
-    my $dt_seq_idx = 0;
-    my $dt = DateTime->new(map { $_ => $dt_seq[$dt_seq_idx++] }
-                                 qw(year month day hour minute second) );
+    my $tp = Time::Piece->strptime($data->{_ts},'%Y%m%d%H%M%S');
 
     while ($str =~ /(?<!\\)(\$\{([^\$\[\]]+)\})/) {
         my $m = {
@@ -218,7 +215,7 @@ sub apply_format {
 
         my $out = '';
         if ($name eq 'datetime') { # special handling
-            $out = $dt->strftime($strf // '%Y-%m-%d %H:%M:%S');
+            $out = $tp->strftime($strf // '%Y-%m-%d %H:%M:%S');
         } elsif (defined $data->{$name}) {
             $out = sprintf($strf // '%s', $data->{$name});
         }
