@@ -24,9 +24,9 @@ my @ids;
 
 foreach my $stream (NGCP::CDR::Exporter::import_config('int-cdr-exporter.conf')) {
     #next if $stream eq 'default';
-    next unless (confval("ENABLED") // 'no') eq 'yes';
-    next unless (confval("INTERMEDIATE") // 'no') eq 'yes';
     NGCP::CDR::Exporter::prepare_config('intexporter', $stream, $config);
+    next unless (confval("ENABLED") // 'no') eq 'yes';
+    next unless (confval("INTERMEDIATE") // 'no') eq 'yes';    
     NGCP::CDR::Exporter::DEBUG("+++ Start intermediate cdr export stream '$stream' with DB " .
         (confval('DBUSER') || "(undef)") .
         "\@".confval('DBDB')." to ".confval('DESTDIR')."\n");

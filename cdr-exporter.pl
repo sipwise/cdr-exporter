@@ -20,8 +20,8 @@ my @ids;
 
 foreach my $stream (NGCP::CDR::Exporter::import_config('cdr-exporter.conf')) {
     #next if $stream eq 'default';
-    next unless (confval("ENABLED") // 'no') eq 'yes';
     NGCP::CDR::Exporter::prepare_config('exporter', $stream);
+    next unless (confval("ENABLED") // 'no') eq 'yes';    
     NGCP::CDR::Exporter::DEBUG("+++ Start cdr export stream '$stream' with DB " .
         (confval('DBUSER') || "(undef)") .
         "\@".confval('DBDB')." to ".confval('DESTDIR')."\n");
