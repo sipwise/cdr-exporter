@@ -146,9 +146,8 @@ sub config2array {
     if ('ARRAY' eq ref($val)) {
         return @$val;
     } elsif ($serialized) {
-        my $decoded = decode_base64($val);
-        die("invalid config value '$val': " . $@ . "\n") if $@;
-        #$decoded =~ s{\A\$VAR\d+\s*=\s*}{};
+        my $decoded;
+        $decoded = decode_base64($val) if defined $val;
         ## no critic (BuiltinFunctions::ProhibitStringyEval)
         $val = eval($decoded);
         die("invalid config value '$decoded': " . $@ . "\n") if $@;
