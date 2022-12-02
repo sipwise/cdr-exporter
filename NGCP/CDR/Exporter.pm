@@ -47,10 +47,13 @@ my $exporter_type = "exporter";
 my $last_admin_field;
 our @admin_fields;
 our @admin_field_transformations;
+our @admin_field_names;
 our @reseller_fields;
 our @reseller_field_transformations;
+our @reseller_field_names;
 our @data_fields;
 our @data_field_transformations;
+our @data_field_names;
 my @joins;
 my @conditions;
 my $dbh;
@@ -191,7 +194,7 @@ sub create_transformation_context {
 }
 
 sub get_export_fields {
-    my ($name,$transformations) = @_;
+    my ($name,$transformations,$colnames) = @_;
     my @ret;
     foreach my $f (config2array($name,1)) {
         $f or next;
@@ -202,6 +205,12 @@ sub get_export_fields {
             $sql =~ s/^\'//;
             $sql =~ s/\'$//;
             push @ret, $sql;
+            push(@$colnames,$f->{name}) if (
+                not exists $f->{enable}
+                or (
+                    length($f->{enable}) and 'yes' eq lc($f->{enable})
+                )
+            );
             if ($transformations) {
                 if ($f->{code}) {
                     ## no critic (BuiltinFunctions::ProhibitStringyEval)
@@ -223,6 +232,7 @@ sub get_export_fields {
             $f =~ s/^\'//;
             $f =~ s/\'$//;
             push @ret, $f;
+            push(@$colnames,$f);
             if ($transformations) {
                 push(@$transformations,undef);
             }
@@ -340,11 +350,14 @@ sub prepare_config {
         unless(-d $config{$stream . '.DESTDIR'});
 
     @admin_field_transformations = ();
-    @admin_fields = get_export_fields('ADMIN_EXPORT_FIELDS',\@admin_field_transformations);
+    @admin_field_names = ();
+    @admin_fields = get_export_fields('ADMIN_EXPORT_FIELDS',\@admin_field_transformations,\@admin_field_names);
     @reseller_field_transformations = ();
-    @reseller_fields = get_export_fields('RESELLER_EXPORT_FIELDS',\@reseller_field_transformations);
+    @reseller_field_names = ();
+    @reseller_fields = get_export_fields('RESELLER_EXPORT_FIELDS',\@reseller_field_transformations,\@reseller_field_names);
     @data_field_transformations = ();
-    @data_fields = get_export_fields('DATA_FIELDS',\@data_field_transformations);
+    @data_field_names = ();
+    @data_fields = get_export_fields('DATA_FIELDS',\@data_field_transformations,\@data_field_names);
 
     @joins = ();
     foreach my $f (get_config_fields('EXPORT_JOINS')) {
@@ -813,9 +826,13 @@ sub write_wrap {
     ($force == 1 && $rec_idx == 0) and return;
     my $reseller_contract_id = "";
     my $mark_query = undef;
+    my @colnames;
     unless($reseller eq "system") {
         $reseller_contract_id = "-".$reseller_ids{$reseller};
         $mark_query = [ $reseller_ids{$reseller} ];
+        @colnames = @reseller_field_names;
+    } else {
+        @colnames = @admin_field_names;
     }
     if (!defined($mark{"lastseq".$reseller_contract_id})) {
         my $tmpmark = NGCP::CDR::Export::get_mark($dbh,
@@ -848,7 +865,7 @@ sub write_wrap {
             \@filevals, $reseller_tempdir, confval('PREFIX'),
             confval('VERSION'), $file_ts, $file_idx, confval('SUFFIX'),
             confval('FILE_FORMAT') // 'default', $reseller_file_data{$reseller},
-            confval('CSV_HEADER'), confval('CSV_FOOTER')
+            confval('CSV_HEADER'), confval('CSV_FOOTER'), \@colnames
         );
         $rec_idx -= $recs;
         delete($reseller_file_data{$reseller});
