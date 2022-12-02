@@ -127,7 +127,7 @@ sub chownmod {
 sub write_file {
     my (
         $lines, $dircomp, $prefix, $version, $ts, $lastseq, $suffix,
-        $format, $file_data, $csv_header, $csv_footer
+        $format, $file_data, $csv_header, $csv_footer, $colnames
     ) = @_;
 
     my $fn =  sprintf('%s/%s_%s_%s_%010i.%s', $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
@@ -143,6 +143,7 @@ sub write_file {
     } else {
         my $str =
             apply_format($csv_header, {
+                            colnames  => join(',',@$colnames),
                             rows      => $num,
                             lines     => $num,
                             version   => $version,
@@ -169,6 +170,7 @@ sub write_file {
     } else {
         my $str =
             apply_format($csv_footer, {
+                            colnames  => join(',',@$colnames),
                             rows      => $num,
                             lines     => $num,
                             version   => $version,
