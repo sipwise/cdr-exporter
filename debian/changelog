@@ -1,3 +1,10 @@
+ngcp-cdr-exporter (11.1.1.2+0~mr11.1.1.2) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [8c3ae59] TT#56100 add ${colnames} parameter for CSV_HEADER patterns
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 07 Dec 2022 16:18:28 +0100
+
 ngcp-cdr-exporter (11.1.1.1+0~mr11.1.1.1) unstable; urgency=medium
 
   * New release.
