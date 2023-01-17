@@ -1,3 +1,12 @@
+ngcp-cdr-exporter (11.2.1.0+0~mr11.2.1.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [6e59553] MT#55638 fix resolving ENABLED property of different streams
+  * [c36782c] MT#55939 no base64 decoding for uninitialized values
+  * [9191680] TT#56100 add ${colnames} parameter for CSV_HEADER patterns
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Tue, 17 Jan 2023 17:41:18 +0100
+
 ngcp-cdr-exporter (11.2.0.0+0~mr11.2.0.0) unstable; urgency=medium
 
   * New release.
