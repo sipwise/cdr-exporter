@@ -151,15 +151,17 @@ sub config2array {
     } elsif ($serialized) {
         my $decoded;
         $decoded = decode_base64($val) if defined $val;
-        ## no critic (BuiltinFunctions::ProhibitStringyEval)
-        $val = eval($decoded);
-        die("invalid config value '$decoded': " . $@ . "\n") if $@;
-        if ('ARRAY' eq ref($val)) {
-            return @$val;
-        } elsif ('HASH' eq ref($val)) {
-            return %$val;
-        } elsif (ref($val)) {
-            die("'$decoded' is " . ref($val) . "\n");
+        if (defined $decoded) {
+            ## no critic (BuiltinFunctions::ProhibitStringyEval)
+            $val = eval($decoded);
+            die("invalid config value '$decoded': " . $@ . "\n") if $@;
+            if ('ARRAY' eq ref($val)) {
+                return @$val;
+            } elsif ('HASH' eq ref($val)) {
+                return %$val;
+            } elsif (ref($val)) {
+                die("'$decoded' is " . ref($val) . "\n");
+            }
         }
     }
     return $val;
