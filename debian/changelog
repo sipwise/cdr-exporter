@@ -1,3 +1,10 @@
+ngcp-cdr-exporter (11.4.0.0+0~mr11.4.0.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [d39bac4] MT#56741 do not eval empty transformations
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Fri, 24 Mar 2023 13:02:36 +0100
+
 ngcp-cdr-exporter (11.3.0.0+0~mr11.3.0.0) unstable; urgency=medium
 
   [ Rene Krenn ]
