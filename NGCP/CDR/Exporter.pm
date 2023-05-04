@@ -359,6 +359,8 @@ sub prepare_config {
     @data_field_transformations = ();
     @data_field_names = ();
     @data_fields = get_export_fields('DATA_FIELDS',\@data_field_transformations,\@data_field_names);
+    
+    undef $last_admin_field;
 
     @joins = ();
     foreach my $f (get_config_fields('EXPORT_JOINS')) {
@@ -511,7 +513,7 @@ sub build_query {
         push @trail, "$key $val";
     }
 
-    $last_admin_field = $#admin_fields;
+    $last_admin_field //= $#admin_fields;
     foreach my $af (keys %$field_positions) {
         undef $field_positions->{$af}->{admin_positions};
         undef $field_positions->{$af}->{reseller_positions};
