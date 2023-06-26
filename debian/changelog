@@ -1,3 +1,10 @@
+ngcp-cdr-exporter (11.5.0.0+0~mr11.5.0.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [1a6443c] MT#57367 prevent reseller_fields appended to admin fields
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 26 Jun 2023 14:09:05 +0200
+
 ngcp-cdr-exporter (11.4.0.0+0~mr11.4.0.0) unstable; urgency=medium
 
   [ Rene Krenn ]
