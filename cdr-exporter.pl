@@ -123,21 +123,22 @@ sub callback {
         push @ignored_ids, $id;
         return;
     }
+    
+    my $exported = 0;
 
     my $sep = prefval('system','cdr_export_field_separator') // confval('CSV_SEP');
     my $quotes = confval('QUOTES');
     my $escape_symbol = confval('CSV_ESC');
     my $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); }
         apply_sclidui_rwrs('system',\@fields,scalar @fields - scalar @$row));
-    write_reseller('system', $line, \&filestats_callback, $data_row);
-    push(@ids, $id);
+    $exported = $exported or write_reseller('system', $line, \&filestats_callback, $data_row);
 
     if($src_uuid ne "0") {
         $sep = prefval($src_provid,'cdr_export_field_separator') // confval('CSV_SEP');
         $quotes = confval('QUOTES');
         $escape_symbol = confval('CSV_ESC');
         $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } apply_sclidui_rwrs($src_provid,$res_row));
-        write_reseller_id($src_provid, $line, \&filestats_callback, $data_row);
+        $exported = $exported or write_reseller_id($src_provid, $line, \&filestats_callback, $data_row);
     }
     if($dst_uuid ne "0") {
         if(confval('EXPORT_INCOMING') eq "no" && $src_provid ne $dst_provid) {
@@ -150,10 +151,17 @@ sub callback {
                 $quotes = confval('QUOTES');
                 $escape_symbol = confval('CSV_ESC');
                 $line = join($sep, map { quote_field($_,$sep,$quotes,$escape_symbol); } apply_sclidui_rwrs($dst_provid,$res_row));
-                write_reseller_id($dst_provid, $line, \&filestats_callback, $data_row);
+                $exported = $exported or write_reseller_id($dst_provid, $line, \&filestats_callback, $data_row);
             }
         }
     }
+    
+    if ($exported) {
+        push(@ids, $id);
+    } else {
+        push(@ignored_ids, $id);
+    }
+    
 }
 
 __DATA__

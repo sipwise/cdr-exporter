@@ -45,6 +45,7 @@ BEGIN {
 my $exporter_type = "exporter";
 
 my $last_admin_field;
+our @filter_resellers;
 our @admin_fields;
 our @admin_field_transformations;
 our @admin_field_names;
@@ -346,10 +347,11 @@ sub prepare_config {
     #$config{$stream . '.TRANSFER_REMOTE'} = "/home/rkrenn/temp/eventexport/cdrexport";
     #$config{$stream . '.DESTDIR'} = "/home/rkrenn/temp/eventexport/cdrexport";
     #$config{$stream . '.EXPORT_CONDITIONS'} = "{ 'base_table.export_status' => { '=' => '\"unexported\"' } }";
-
+    
     die "Invalid destination directory '".$config{$stream . '.DESTDIR'}."'\n"
         unless(-d $config{$stream . '.DESTDIR'});
-
+    
+    @filter_resellers = ();
     @admin_field_transformations = ();
     @admin_field_names = ();
     @admin_fields = get_export_fields('ADMIN_EXPORT_FIELDS',\@admin_field_transformations,\@admin_field_names);
@@ -359,6 +361,11 @@ sub prepare_config {
     @data_field_transformations = ();
     @data_field_names = ();
     @data_fields = get_export_fields('DATA_FIELDS',\@data_field_transformations,\@data_field_names);
+    
+    foreach my $r (split(/,/,confval('RESELLERS') // '')) {
+        $r =~ s/^\s*//; $r =~ s/\s*$//g;
+        push(@filter_resellers, $r) if length($r);
+    }
     
     undef $last_admin_field;
 
@@ -803,10 +810,14 @@ sub run {
 
 sub write_reseller {
     my ($reseller, $line, $callback, $callback_arg) = @_;
-    push(@{$reseller_lines{$reseller}}, $line);
-    $callback and $callback->($callback_arg, \$reseller_file_data{$reseller});
-    $reseller_counts{$reseller}++;
-    write_wrap($reseller);
+    if (grep { $_ eq $reseller; } @filter_resellers) {
+        push(@{$reseller_lines{$reseller}}, $line);
+        $callback and $callback->($callback_arg, \$reseller_file_data{$reseller});
+        $reseller_counts{$reseller}++;
+        write_wrap($reseller);
+        return 1;
+    }
+    return 0;
 }
 
 sub write_reseller_id {
@@ -815,7 +826,7 @@ sub write_reseller_id {
         $reseller_names{$id} = NGCP::CDR::Export::get_reseller_name($dbh, $id);
         $reseller_ids{$reseller_names{$id}} = $id;
     }
-    write_reseller($reseller_names{$id}, $line, $callback, $callback_arg);
+    return write_reseller($reseller_names{$id}, $line, $callback, $callback_arg);
 }
 
 sub write_wrap {
