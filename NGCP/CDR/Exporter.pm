@@ -810,7 +810,7 @@ sub run {
 
 sub write_reseller {
     my ($reseller, $line, $callback, $callback_arg) = @_;
-    if (grep { $_ eq $reseller; } @filter_resellers) {
+    if (scalar @filter_resellers == 0 or grep { $_ eq $reseller; } @filter_resellers) {
         push(@{$reseller_lines{$reseller}}, $line);
         $callback and $callback->($callback_arg, \$reseller_file_data{$reseller});
         $reseller_counts{$reseller}++;
