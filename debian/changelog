@@ -1,3 +1,10 @@
+ngcp-cdr-exporter (12.5.0.0+0~mr12.5.0.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [6acae99] MT#59923 export all resellers, if there is no resellerfilter
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Wed, 22 May 2024 14:30:00 +0200
+
 ngcp-cdr-exporter (12.4.0.0+0~mr12.4.0.0) unstable; urgency=medium
 
   [ Rene Krenn ]
