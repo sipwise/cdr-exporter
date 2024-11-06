@@ -291,7 +291,7 @@ sub import_config {
 
     start_log();
 
-    my $cfg = new Config::Simple();
+    my $cfg = Config::Simple->new;
     $cfg->read($config_file);
 
     my %presets = %config;
