@@ -598,6 +598,7 @@ sub load_rewrite_rules {
 
 sub apply_sclidui_rwrs {
     my ($reseller_id,$row,$position_offset) = @_;
+    my @row = @$row; # prevent panic with arrayref auto-vivification
     $position_offset //= 0;
     my $row_type;
     if ('system' eq $reseller_id) {
@@ -607,8 +608,8 @@ sub apply_sclidui_rwrs {
     }
     if (defined $field_positions->{source_cli}->{$row_type}) {
         foreach my $i (@{$field_positions->{source_cli}->{$row_type}}) {
-            $row->[$i + $position_offset] = apply_rewrite(
-                number => $row->[$i + $position_offset],
+            $row[$i + $position_offset] = apply_rewrite(
+                number => $row[$i + $position_offset],
                 dir => 'caller_out',
                 rwrs_id => (prefval($reseller_id,'cdr_export_sclidui_rwrs_id') // 0),
             );
@@ -616,14 +617,14 @@ sub apply_sclidui_rwrs {
     }
     if (defined $field_positions->{destination_user_in}->{$row_type}) {
         foreach my $i (@{$field_positions->{destination_user_in}->{$row_type}}) {
-            $row->[$i + $position_offset] = apply_rewrite(
-                number => $row->[$i + $position_offset],
+            $row[$i + $position_offset] = apply_rewrite(
+                number => $row[$i + $position_offset],
                 dir => 'callee_out',
                 rwrs_id => (prefval($reseller_id,'cdr_export_sclidui_rwrs_id') // 0),
             );
         }
     }
-    return @$row;
+    return @row;
 }
 
 sub apply_rewrite {
