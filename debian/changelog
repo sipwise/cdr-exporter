@@ -1,3 +1,10 @@
+ngcp-cdr-exporter (13.5.1.2+0~mr13.5.1.2) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [7e8abc1] MT#63876 prevent adding elements in array refs
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 10 Nov 2025 12:16:41 +0100
+
 ngcp-cdr-exporter (13.5.1.1+0~mr13.5.1.1) unstable; urgency=medium
 
   * New release.
