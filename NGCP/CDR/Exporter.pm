@@ -347,10 +347,15 @@ sub prepare_config {
     #$config{$stream . '.TRANSFER_REMOTE'} = "/home/rkrenn/temp/eventexport/cdrexport";
     #$config{$stream . '.DESTDIR'} = "/home/rkrenn/temp/eventexport/cdrexport";
     #$config{$stream . '.EXPORT_CONDITIONS'} = "{ 'base_table.export_status' => { '=' => '\"unexported\"' } }";
-    
-    die "Invalid destination directory '".$config{$stream . '.DESTDIR'}."'\n"
-        unless(-d $config{$stream . '.DESTDIR'});
-    
+
+    if (not -d confval('DESTDIR')) {
+        File::Path::make_path(confval('DESTDIR'), {
+            user => confval('FILES_OWNER'),
+            group => confval('FILES_GROUP'),
+            chmod => oct(777) & ~confval('FILES_MASK'),
+        });
+    }
+
     @filter_resellers = ();
     @admin_field_transformations = ();
     @admin_field_names = ();
