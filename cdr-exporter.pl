@@ -1,8 +1,7 @@
 #!/usr/bin/perl
 
-use strict;
-use warnings;
-use v5.14;
+use v5.40;
+
 use Fcntl qw(LOCK_EX LOCK_NB);
 
 use NGCP::CDR::Exporter;

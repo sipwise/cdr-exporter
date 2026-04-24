@@ -1,7 +1,7 @@
 package NGCP::CDR::Transfer;
 
-use strict;
-use warnings;
+use v5.40;
+
 use File::Basename;
 use File::Temp;
 use Net::SFTP::Foreign;

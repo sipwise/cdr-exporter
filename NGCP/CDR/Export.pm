@@ -1,9 +1,9 @@
 package NGCP::CDR::Export;
 
+use v5.40;
+
 use Digest::MD5;
 use Time::Piece;
-use warnings;
-use strict;
 
 our $reseller_id_col = 'contract_id';
 

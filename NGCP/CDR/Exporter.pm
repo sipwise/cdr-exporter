@@ -1,8 +1,6 @@
 package NGCP::CDR::Exporter;
 
-use strict;
-use warnings;
-use v5.14;
+use v5.40;
 
 use Config::Simple;
 use DBI;
