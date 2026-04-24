@@ -171,11 +171,10 @@ sub transform_value {
     
     my ($value,$transformation,$context) = @_;
     if ($transformation) {
-        eval {
+        try {
             $value = $transformation->{sub}->($value,$context);
-        };
-        if ($@) {
-            warn("error transforming [$transformation->{name}] value '$value': " . $@ . "\n");
+        } catch ($e) {
+            warn("error transforming [$transformation->{name}] value '$value': $e\n");
         }
     }
     return $value;
