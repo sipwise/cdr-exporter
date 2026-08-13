@@ -124,14 +124,22 @@ sub chownmod {
     $mask and chmod($defmode & ~oct($mask), $file);
 }
 
+sub export_path {
+    my ($dir, $prefix, $version, $ts, $seq, $suffix) = @_;
+    return sprintf('%s/%s_%s_%s_%010i.%s', $dir, $prefix, $version, $ts, $seq, $suffix);
+}
+
 sub write_file {
     my (
         $lines, $dircomp, $prefix, $version, $ts, $lastseq, $suffix,
         $format, $file_data, $csv_header, $csv_footer, $colnames
     ) = @_;
 
-    my $fn =  sprintf('%s/%s_%s_%s_%010i.%s', $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
-    my $tfn = sprintf('%s/%s_%s_%s_%010i.%s.'.$$, $dircomp, $prefix, $version, $ts, $lastseq, $suffix);
+    my $fn =  export_path($dircomp, $prefix, $version, $ts, $lastseq, $suffix);
+    my $tfn = $fn . '.' . $$;
+    if (-e $fn) {
+        die("refusing to overwrite existing file $fn\n");
+    }
     my $fd;
     open($fd, ">", $tfn) or die("failed to open tmp-file $tfn ($!), stop\n");
     my $ctx = Digest::MD5->new;
@@ -186,6 +194,10 @@ sub write_file {
     close($fd) or die ("failed to close tmp-file $tfn ($!), stop\n");
     undef($ctx);
 
+    if (-e $fn) {
+        unlink($tfn);
+        die("refusing to overwrite existing file $fn\n");
+    }
     rename($tfn, $fn) or die("failed to move tmp-file $tfn to $fn ($!), stop\n");
     NGCP::CDR::Exporter::DEBUG("successfully moved $tfn to $fn\n");
 }

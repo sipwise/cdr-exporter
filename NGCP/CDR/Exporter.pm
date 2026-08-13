@@ -864,11 +864,22 @@ sub write_wrap {
         $reseller_dname = "resellers/$reseller_dname";
     }
     my $reseller_tempdir = $tempdir . "/" . $reseller_dname;
+    my $reseller_destdir = confval('DESTDIR') . "/$reseller_dname";
+    my $prefix = confval('PREFIX');
+    my $version = confval('VERSION');
+    my $suffix = confval('SUFFIX');
 
     do {
         my $recs = ($rec_idx > $max) ? $max : $rec_idx;
 
         $file_idx++;
+        my $dst_path = NGCP::CDR::Export::export_path(
+            $reseller_destdir, $prefix, $version, $file_ts, $file_idx, $suffix
+        );
+        # Abort before writing/moving so export_status / lastseq stay uncommitted.
+        if (-e $dst_path) {
+            die("refusing to overwrite existing file $dst_path\n");
+        }
         my @filevals = @$vals[0 .. $recs-1];
         @$vals = @$vals[$recs .. @$vals-1]; # modified $reseller_lines
 
@@ -879,8 +890,8 @@ sub write_wrap {
         }
 
         NGCP::CDR::Export::write_file(
-            \@filevals, $reseller_tempdir, confval('PREFIX'),
-            confval('VERSION'), $file_ts, $file_idx, confval('SUFFIX'),
+            \@filevals, $reseller_tempdir, $prefix,
+            $version, $file_ts, $file_idx, $suffix,
             confval('FILE_FORMAT') // 'default', $reseller_file_data{$reseller},
             confval('CSV_HEADER'), confval('CSV_FOOTER'), \@colnames
         );
@@ -893,12 +904,12 @@ sub write_wrap {
     opendir(my $fh, $reseller_tempdir);
     foreach my $file(readdir($fh)) {
         my $src = "$reseller_tempdir/$file";
-        my $dst = confval('DESTDIR') . "/$reseller_dname/$file";
+        my $dst = "$reseller_destdir/$file";
         if(-f $src) {
             DEBUG "moving $src to $dst\n";
             my $err;
-            -d confval('DESTDIR') . "/$reseller_dname" ||
-                File::Path::make_path(confval('DESTDIR') . "/$reseller_dname", {
+            -d $reseller_destdir ||
+                File::Path::make_path($reseller_destdir, {
                         error => \$err,
                         user => confval('FILES_OWNER'),
                         group => confval('FILES_GROUP')
@@ -906,6 +917,9 @@ sub write_wrap {
                 );
             if(defined $err && @$err) {
                 ERR "failed to create directory $reseller_dname: " . Dumper $err;
+            }
+            if (-e $dst) {
+                die("refusing to overwrite existing file $dst\n");
             }
             unless(move($src, $dst)) {
                 ERR "failed to move $src to $dst: $!\n";
