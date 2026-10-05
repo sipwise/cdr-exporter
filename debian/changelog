@@ -1,3 +1,10 @@
+ngcp-cdr-exporter (27.0.0.0+0~mr27.0.0.0) unstable; urgency=medium
+
+  [ Rene Krenn ]
+  * [2a56091] MT#65732 refuse to overwrite existing CDR export files
+
+ -- Sipwise Jenkins Builder <jenkins@sipwise.com>  Mon, 05 Oct 2026 12:33:17 +0200
+
 ngcp-cdr-exporter (26.3.0.0+0~mr26.3.0.0) unstable; urgency=medium
 
   * New release.
